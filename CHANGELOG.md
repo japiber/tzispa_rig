@@ -1,10 +1,16 @@
 Tzispa Rig
 
-General purpose web framework
+Rig templates implementation
+
+## v0.2.2
+- Bug fix in iblk render
+- Remake of the Binder class defining two specialized classes: TemplateBinder and LoopBinder
+- Bug fix and improvements in the statements parser
+- Bug fix in the loop_binder method not allowing 2 loops with equal ids at the same level
 
 ## v0.2.1
-- Regex optimizations
-- Some classes has been renamed for better code readibility
+- Regexp optimizations
+- Some classes has been renamed for better code readability
 
 ## v0.2.0
 - Implemented new parser to break away parsing and rendering

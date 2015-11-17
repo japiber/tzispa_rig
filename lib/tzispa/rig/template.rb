@@ -70,7 +70,7 @@ module Tzispa
         end
         raise ArgumentError.new('Missing parameter(s): domain and engine must be especified') unless @domain && @engine
         super "#{@domain.path}/rig/#{@type.to_s.downcase}/#{@name}.#{RIG_EXTENSION}.#{@format}".freeze
-        @params = Parameters.new(params) if params
+        @params = Parameters.new(params)
       end
 
       def parse!
@@ -80,9 +80,9 @@ module Tzispa
       end
 
       def render(context)
-        binder = Binder.template_binder(self, context)
-        binder.bind! if binder && binder.respond_to?(:bind!)
         parse! unless @parser
+        binder = TemplateBinder.for self, context
+        binder.bind! if binder && binder.respond_to?(:bind!)
         @parser.render binder, context
       end
 
@@ -102,12 +102,16 @@ module Tzispa
         @params = Parameters.new(value)
       end
 
+      def params
+        @params.data
+      end
+
       def binder_class_name
         @binder_class_name ||= "#{TzString.camelize @domain.name }::Rig::#{@type.to_s.capitalize}::#{TzString.camelize @name }".freeze
       end
 
       def binder_class
-        @domain.require("rig/#{@type}/#{@name.downcase}")
+        @domain.require "rig/#{@type}/#{@name.downcase}"
         TzString.constantize binder_class_name
       end
 

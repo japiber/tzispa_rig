@@ -22,8 +22,8 @@ module Tzispa
 
       def self.instance(parser, type, match)
         case type
-        when :metavar
-          ParsedMetavar.new parser, type, match[1]
+        when :meta
+          ParsedMeta.new parser, type, match[1]
         when :var
           ParsedVar.new parser, type, match[1], match[2]
         when :purl
@@ -31,9 +31,9 @@ module Tzispa
         when :api
           ParsedApi.new parser, type, match[1], match[2], match[3]
         when :loop
-          ParsedLoop.new parser, type, match[1], match[2]
+          ParsedLoop.new parser, type, match[3], match[4]
         when :ife
-          ParsedIfe.new parser, type, match[1], match[2], match[4]
+          ParsedIfe.new parser, type, match[7], match[8], match[10]
         when :blk
           ParsedBlock.new parser, type, match[3], match[4]
         when :iblk
@@ -44,12 +44,13 @@ module Tzispa
       end
 
       def anchor
+        #[[object_id].pack("h*")].pack("m0")
         @anchor ||= "@@#{"%x" % object_id}@@".freeze
       end
 
     end
 
-    class ParsedMetavar < ParsedEntity
+    class ParsedMeta < ParsedEntity
 
       attr_reader :id
 
@@ -158,16 +159,17 @@ module Tzispa
       end
 
       def parse!
-        @loop_parser = ParserNext.new(template, @body).parse!
+        @loop_parser = ParserNext.new( template, @body ).parse!
         self
       end
 
       def render(binder)
-        looper = binder.data.respond_to?(@id) ? binder.data.send(@id) : nil
-        looper ? looper.data.map { |item|
-          @loop_parser.render(item)
-        }.to_a.join :
-        "missing looper for #{@id}".freeze
+        String.new.tap { |text|
+          looper = binder.data.send(@id) if binder.data.respond_to?(@id)
+          looper.data.each { |loop_item|
+            text << @loop_parser.render(loop_item) if loop_item
+          } if looper
+        }
       end
 
     end
@@ -191,11 +193,15 @@ module Tzispa
       end
 
       def attribute_tags
-        @attribute_tags ||= [@test].concat(@then_parser.attribute_tags).concat(@else_parser? @else_parser.attribute_tags : []).compact.uniq.freeze
+        @attribute_tags ||= [@test].concat(@then_parser.attribute_tags).concat((@else_parser && @else_parser.attribute_tags) || Array.new).compact.uniq.freeze
+      end
+
+      def loop_parser(id)
+        @then_parser.loop_parser(id).concat((@else_parser && @else_parser.loop_parser(id)) || Array.new).compact.freeze
       end
 
       def render(binder)
-        test_eval = binder.data.respond_to?(@test) && binder.data.send(@test)
+        test_eval = binder.data && binder.data.respond_to?(@test) && binder.data.send(@test)
         ifeparser = test_eval ? @then_parser : @else_parser
         ifeparser ? ifeparser.render(binder) : STRING_EMPTY
       end
@@ -230,9 +236,11 @@ module Tzispa
 
     class ParsedIBlock < ParsedEntity
 
+      attr_reader :id
+
       def initialize(parser, type, test, id_then, params_then, id_else, params_else)
         super(parser, type)
-        @test = test
+        @id = test
         @id_then = id_then
         @params_then = params_then
         @id_else = id_else
@@ -246,7 +254,7 @@ module Tzispa
       end
 
       def render(binder)
-        if binder.respond_to?(@test) && binder.send(@test)
+        if binder.data.respond_to?(@id) && binder.data.send(@id)
           blk = @block_then.dup
           if @params_then
             b_params = @params_then.dup.gsub(RE_ANCHOR) { |match|
@@ -296,34 +304,30 @@ module Tzispa
     end
 
 
-
     class ParserNext
 
       EMPTY_STRING = ''.freeze
 
-      attr_reader :flags, :template, :the_parsed
-
       RIG_EMPTY = {
-        :flags   => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/
+        :flags => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/
       }.freeze
 
       RIG_EXPRESSIONS = {
-        :metavar => /\{%([^%]+?)%\}/,
-        :var     => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/,
-        :purl    => /<purl:(\w+(?:\.\w+)?)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/,
-        :api     => /<api:(\w+(?:\.\w+)?):([^:\/]+)(?::([^\/]+))?\/>/
+        :meta => /\{%([^%]+?)%\}/,
+        :var  => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/,
+        :purl => /<purl:(\w+(?:\.\w+)?)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/,
+        :api  => /<api:(\w+(?:\.\w+)?):([^:\/]+)(?::([^\/]+))?\/>/
       }.freeze
 
-      RIG_STATEMENTS = {
-        :loop    => /<loop:(\w+)>(.*?)<\/loop:\1>/m,
-        :ife     => /<ife:(\w+)>(.*?)(<else:\1\/>(.*?))?<\/ife:\1>/m
-      }.freeze
+      RIG_STATEMENTS = /(<(loop):(\w+)>(.*?)<\/loop:\3>)|(<(ife):(\w+)>(.*?)(<else:\7\/>(.*?))?<\/ife:\7>)/m
 
       RIG_TEMPLATES = {
-        :blk     => /<(blk):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :iblk    => /<(iblk):(\w+):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?:(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :static  => /<(static):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/
+        :blk    => /<(blk):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
+        :iblk   => /<(iblk):(\w+):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?:(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
+        :static => /<(static):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/
       }.freeze
+
+      attr_reader :flags, :template, :the_parsed
 
       def initialize(template, text=nil)
         @template = template
@@ -343,11 +347,11 @@ module Tzispa
       end
 
       def render(binder, context=nil)
-        text = @inner_text.dup
-        @the_parsed.each { |value|
-          text.gsub! value.anchor, value.render(binder)
-        }
-        text
+        @inner_text.dup.tap { |text|
+          @the_parsed.each { |value|
+            text.gsub! value.anchor, value.render(binder)
+          }
+        }.freeze
       end
 
       def attribute_tags
@@ -359,7 +363,9 @@ module Tzispa
       end
 
       def loop_parser(id)
-        @the_parsed.select { |p| p.type==:loop && p.id==id}.first
+        @the_parsed.select{ |p| p.type==:loop && p.id==id}.concat(
+          @the_parsed.select{ |p| p.type==:ife }.map { |p| p.loop_parser(id) }.flatten.compact
+        )
       end
 
       private
@@ -382,12 +388,12 @@ module Tzispa
       end
 
       def parse_statements
-        RIG_STATEMENTS.each_key { |kre|
-          @inner_text.gsub!(RIG_STATEMENTS[kre]) { |match|
-            pe = ParsedEntity.instance(self, kre, Regexp.last_match )
-            @the_parsed << pe.parse!
-            pe.anchor
-          }
+        @inner_text.gsub!(RIG_STATEMENTS) { |match|
+          #puts Regexp.last_match.inspect
+          type = (Regexp.last_match[2] || '') << (Regexp.last_match[6] || '')
+          pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
+          @the_parsed << pe.parse!
+          pe.anchor
         }
       end
 
