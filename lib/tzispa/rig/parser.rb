@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'tzispa/rig/engine'
 require 'tzispa/rig/formatter'
 require 'tzispa/helpers/security'
@@ -13,16 +15,16 @@ module Tzispa
       attr_reader :text
 
       RIG_SYNTAX = {
-        :re_flags   => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/,
-        :blk        => /<(blk):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :iblk       => /<(iblk):(\w+):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?:(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :static     => /<(static):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :re_var     => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/,
-        :re_metavar => /\{%([^%]+?)%\}/,
-        :re_loop    => /<loop:(\w+)>(.*?)<\/loop:\1>/m,
-        :re_ife     => /<ife:(\w+)>(.*?)(<else:\1\/>(.*?))?<\/ife:\1>/m,
-        :re_purl    => /<purl:(\w+)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/,
-        :re_api     => /<api:(\w+(?:\.\w+)?):(\w+)(?::(\w+))?\/>/,
+        :re_flags   => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/.freeze,
+        :blk        => /<(blk):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/.freeze,
+        :iblk       => /<(iblk):(\w+):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?:(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/.freeze,
+        :static     => /<(static):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/.freeze,
+        :re_var     => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/.freeze,
+        :re_metavar => /\{%([^%]+?)%\}/.freeze,
+        :re_loop    => /<loop:(\w+)>(.*?)<\/loop:\1>/m.freeze,
+        :re_ife     => /<ife:(\w+)>(.*?)(<else:\1\/>(.*?))?<\/ife:\1>/m.freeze,
+        :re_purl    => /<purl:(\w+)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/.freeze,
+        :re_api     => /<api:(\w+(?:\.\w+)?):(\w+)(?::([^:]+))?(?::([^\/]+))?\/>/.freeze
       }
 
       def initialize(engine, binder=nil, text=nil)
@@ -119,9 +121,9 @@ module Tzispa
 
       def parseAPI
         @text.gsub!(RIG_SYNTAX[:re_api]) { |match|
-          handler, verb, predicate = Regexp.last_match[1], Regexp.last_match[2], Regexp.last_match[3]
+          handler, verb, predicate, sufix = Regexp.last_match[1], Regexp.last_match[2], Regexp.last_match[3], Regexp.last_match[4]
           sign = Parser.sign_array [handler, verb, predicate], @engine.app.config.salt
-          @engine.app.router_path :api, {handler: handler, verb: verb, predicate: predicate, sign: sign}
+          @engine.app.router_path :api, {handler: handler, verb: verb, predicate: predicate, sign: sign, sufix: sufix}
         }
       end
 

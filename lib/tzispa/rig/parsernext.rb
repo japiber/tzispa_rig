@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'forwardable'
 require 'tzispa/domain'
 require 'tzispa/utils/string'
@@ -29,7 +31,7 @@ module Tzispa
         when :purl
           ParsedUrl.new parser, type, match[1], match[3]
         when :api
-          ParsedApi.new parser, type, match[1], match[2], match[3]
+          ParsedApi.new parser, type, match[1], match[2], match[3], match[4]
         when :loop
           ParsedLoop.new parser, type, match[3], match[4]
         when :ife
@@ -121,18 +123,20 @@ module Tzispa
 
       attr_reader :handler, :verb, :predicate
 
-      def initialize(parser, type, handler, verb, predicate)
+      def initialize(parser, type, handler, verb, predicate, sufix)
         super(parser, type)
         @handler = handler
         @verb = verb
         @predicate = predicate
+        @sufix = sufix
       end
 
       def render(binder)
         b_handler = bind_value @handler.dup, binder
         b_verb = bind_value @verb.dup, binder
         b_predicate = bind_value( @predicate.dup, binder ) if @predicate
-        binder.context.api b_handler, b_verb, b_predicate
+        b_sufix = bind_value( @sufix.dup, binder ) if @sufix
+        binder.context.api b_handler, b_verb, b_predicate, b_sufix
       end
 
       private
@@ -209,6 +213,8 @@ module Tzispa
     end
 
     class ParsedBlock < ParsedEntity
+
+      attr_reader :params
 
       def initialize(parser, type, id, params)
         super(parser, type)
@@ -306,17 +312,17 @@ module Tzispa
 
     class ParserNext
 
-      EMPTY_STRING = ''.freeze
+      EMPTY_STRING = ''
 
       RIG_EMPTY = {
         :flags => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/
       }.freeze
 
       RIG_EXPRESSIONS = {
-        :meta => /\{%([^%]+?)%\}/,
+        :meta => /\{%([^%]+?)%\}/.freeze,
         :var  => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/,
         :purl => /<purl:(\w+(?:\.\w+)?)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/,
-        :api  => /<api:(\w+(?:\.\w+)?):([^:\/]+)(?::([^\/]+))?\/>/
+        :api  => /<api:([^:\.]+(?:\.[^:]+)?):([^:\/]+)(?::([^:\/]+))?(?::([^\/]+))?\/>/
       }.freeze
 
       RIG_STATEMENTS = /(<(loop):(\w+)>(.*?)<\/loop:\3>)|(<(ife):(\w+)>(.*?)(<else:\7\/>(.*?))?<\/ife:\7>)/m
@@ -390,7 +396,7 @@ module Tzispa
       def parse_statements
         @inner_text.gsub!(RIG_STATEMENTS) { |match|
           #puts Regexp.last_match.inspect
-          type = (Regexp.last_match[2] || '') << (Regexp.last_match[6] || '')
+          type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new)
           pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
           @the_parsed << pe.parse!
           pe.anchor
@@ -400,7 +406,7 @@ module Tzispa
       def parse_templates
         reTemplates = Regexp.new RIG_TEMPLATES.values.map{ |re| "(#{re})"}.join('|')
         @inner_text.gsub!(reTemplates) { |match|
-          type = (Regexp.last_match[2] || '') << (Regexp.last_match[6] || '') << (Regexp.last_match[13] || '')
+          type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new) << (Regexp.last_match[13] || String.new)
           pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
           @the_parsed << pe.parse!
           pe.anchor

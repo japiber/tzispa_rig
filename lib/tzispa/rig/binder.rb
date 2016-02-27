@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'forwardable'
 require 'tzispa/rig'
 
@@ -27,7 +29,6 @@ module Tzispa
       end
 
     end
-
 
 
     class TemplateBinder < Binder

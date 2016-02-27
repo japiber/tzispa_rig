@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.2.3
+- Fix in the api call regex syntax
+- Added prefix in api calls
+
 ## v0.2.2
 - Bug fix in iblk render
 - Remake of the Binder class defining two specialized classes: TemplateBinder and LoopBinder

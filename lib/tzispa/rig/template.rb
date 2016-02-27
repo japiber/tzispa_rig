@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Tzispa
   module Rig
 
@@ -19,7 +21,7 @@ module Tzispa
       end
 
       def modified?
-        @modified != ::File.mtime(@file)
+        @modified != File.mtime(@file)
       end
 
       def exists?
@@ -30,7 +32,7 @@ module Tzispa
         begin
           raise NotFound.new("Template file '#{@file}' not found") unless exists?
           ::File.open(@file, 'r:UTF-8') { |f|
-            @content = ''
+            @content = String.new
             @modified = f.mtime
             while line = f.gets
               @content << line
@@ -53,11 +55,14 @@ module Tzispa
       DEFAULT_FORMAT = 'htm'.freeze
       RIG_EXTENSION  = 'rig'.freeze
 
-      attr_reader :name, :type, :domain, :format, :params, :parser, :engine
+      attr_reader :name, :type, :domain, :format, :params, :parser, :engine, :subdomain
       def_delegators :@parser, :attribute_tags
 
       def initialize(name:, type:, domain: nil, parent: nil, format: nil, params: nil, engine: nil)
-        @name = name.downcase
+        subdom_name = name.downcase.split('.')
+        @subdomain = subdom_name.first if subdom_name.length > 1
+        @name = subdom_name.last
+        @params = Parameters.new(params)
         send('type=', type)
         if parent
           @engine = engine || parent.engine
@@ -69,8 +74,7 @@ module Tzispa
           @format = format || DEFAULT_FORMAT
         end
         raise ArgumentError.new('Missing parameter(s): domain and engine must be especified') unless @domain && @engine
-        super "#{@domain.path}/rig/#{@type.to_s.downcase}/#{@name}.#{RIG_EXTENSION}.#{@format}".freeze
-        @params = Parameters.new(params)
+        super "#{@domain.path}/rig/#{@type.to_s.downcase}/#{@subdomain+'/' if @subdomain}#{@name}.#{RIG_EXTENSION}.#{@format}"
       end
 
       def parse!
@@ -106,13 +110,9 @@ module Tzispa
         @params.data
       end
 
-      def binder_class_name
-        @binder_class_name ||= "#{TzString.camelize @domain.name }::Rig::#{@type.to_s.capitalize}::#{TzString.camelize @name }".freeze
-      end
-
       def binder_class
-        @domain.require "rig/#{@type}/#{@name.downcase}"
-        TzString.constantize binder_class_name
+        @domain.require "rig/#{@type}/#{@subdomain+'/' if @subdomain}#{@name.downcase}"
+        TzString.constantize "#{TzString.camelize @domain.name}::Rig::#{@type.to_s.capitalize}::#{TzString.camelize(@subdomain+'::') if @subdomain}#{TzString.camelize @name }"
       end
 
       private
