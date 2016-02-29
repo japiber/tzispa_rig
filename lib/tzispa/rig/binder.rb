@@ -21,6 +21,25 @@ module Tzispa
         @dataStruct = attribute_tags.count > 0 ? Struct.new(*attribute_tags) : Struct.new(nil)
       end
 
+      # Gets a LoopBinder context for the given loop_id in a rig template
+      #
+      #       .... <var:myvar/> ...
+      #
+      #    <loop:mylist>
+      #       ... <var:myvar/> ....
+      #    </loop:mylist>
+      #
+      #    loop_binder(:mylist)
+      #
+      # The LoopBinder returned by this funcion is independent of the
+      # parent binder where it is defined, so the template symbols of the parent
+      # binder are not accesible in the loop_binder context. In
+      # other words, in the top example the two 'myvar' symbols are different symbols
+      # and you can not access the first myvar value inside the loop
+      #
+      # ==== Parameters
+      # loop_id<Symbol>: The id of the template loop to bind
+      #
       def loop_binder(loop_id)
         loop_parser = @parser.loop_parser loop_id
         raise ArgumentError.new("#{self.class}:: there isn't any loop tagged '#{loop_id}'") unless loop_parser && loop_parser.count > 0
