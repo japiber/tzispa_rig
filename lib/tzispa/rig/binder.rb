@@ -96,11 +96,11 @@ module Tzispa
         @source_object.send method, *args, &generator
       end
 
-      def loop_item(**params)
+      def loop_item(params=nil)
         (LoopItem.new self).tap { |item|
           params.each{ |k,v|
             item.data[k] = v
-          }
+          } if params
         }
       end
 
