@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require 'forwardable'
+require 'tzispa/utils/string'
+require 'tzispa/rig'
+
 module Tzispa
   module Rig
 
@@ -24,13 +28,13 @@ module Tzispa
         @modified != File.mtime(@file)
       end
 
-      def exists?
-        ::File.exists?(@file)
+      def exist?
+        ::File.exist?(@file)
       end
 
       def load!
         begin
-          raise NotFound.new("Template file '#{@file}' not found") unless exists?
+          raise NotFound.new("Template file '#{@file}' not found") unless exist?
           ::File.open(@file, 'r:UTF-8') { |f|
             @content = String.new
             @modified = f.mtime
@@ -43,6 +47,12 @@ module Tzispa
           raise ReadError.new "Template file '#{@file}' could not be read"
         end
         self
+      end
+
+      def create(content=nil)
+        ::File.open(@file, "w") { |f|
+          f.puts content
+        }
       end
 
     end
@@ -73,7 +83,6 @@ module Tzispa
           @domain = domain
           @format = format || DEFAULT_FORMAT
         end
-        raise ArgumentError.new('Missing parameter(s): domain and engine must be especified') unless @domain && @engine
         super "#{@domain.path}/rig/#{@type.to_s.downcase}/#{@subdomain+'/' if @subdomain}#{@name}.#{RIG_EXTENSION}.#{@format}"
       end
 
@@ -88,6 +97,11 @@ module Tzispa
         binder = TemplateBinder.for self, context
         binder.bind! if binder && binder.respond_to?(:bind!)
         @parser.render binder, context
+      end
+
+      def create
+        super
+        create_binder
       end
 
       def is_block?
@@ -110,9 +124,21 @@ module Tzispa
         @params.data
       end
 
+      def binder_require
+        "rig/#{@type}/#{@subdomain+'/' if @subdomain}#{@name.downcase}"
+      end
+
+      def binder_namespace
+        "#{TzString.camelize @domain.name}::Rig::#{@type.to_s.capitalize}#{'::' + TzString.camelize(@subdomain) if @subdomain}"
+      end
+
+      def binder_class_name
+        TzString.camelize @name
+      end
+
       def binder_class
-        @domain.require "rig/#{@type}/#{@subdomain+'/' if @subdomain}#{@name.downcase}"
-        TzString.constantize "#{TzString.camelize @domain.name}::Rig::#{@type.to_s.capitalize}::#{TzString.camelize(@subdomain+'::') if @subdomain}#{TzString.camelize @name }"
+        @domain.require binder_require
+        TzString.constantize "#{binder_namespace}::#{binder_class_name}"
       end
 
       private
@@ -120,6 +146,17 @@ module Tzispa
       def type=(value)
         raise ArgumentError.new("#{value} is not a Rig block") unless BASIC_TYPES.include?(value)
         @type = value
+      end
+
+      def create_binder
+        ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
+          f.puts "module #{binder_namespace}\n"
+          f.puts "  class #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n"
+          f.puts "     def bind!"
+          f.puts "     end"
+          f.puts "  end"
+          f.puts "end\n"
+        } if @type == :block
       end
 
     end
