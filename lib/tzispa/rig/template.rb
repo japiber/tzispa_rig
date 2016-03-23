@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'forwardable'
+require 'fileutils'
 require 'tzispa/utils/string'
 require 'tzispa/rig'
 
@@ -83,7 +84,7 @@ module Tzispa
           @domain = domain
           @format = format || DEFAULT_FORMAT
         end
-        super "#{@domain.path}/rig/#{@type.to_s.downcase}/#{@subdomain+'/' if @subdomain}#{@name}.#{RIG_EXTENSION}.#{@format}"
+        super "#{path}/#{@name}.#{RIG_EXTENSION}.#{@format}"
       end
 
       def parse!
@@ -99,7 +100,13 @@ module Tzispa
         @parser.render binder, context
       end
 
+      def path
+        "#{@domain.path}/rig/#{@type.to_s.downcase}#{'/'+@subdomain if @subdomain}"
+      end
+
       def create
+        FileUtils.mkdir_p(path) unless Dir.exist? path
+        puts "path = #{Dir.exist? path}"
         super
         create_binder
       end
@@ -150,12 +157,20 @@ module Tzispa
 
       def create_binder
         ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
-          f.puts "module #{binder_namespace}\n"
-          f.puts "  class #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n"
-          f.puts "     def bind!"
-          f.puts "     end"
-          f.puts "  end"
-          f.puts "end\n"
+          binder_code = TzString.new
+          f.puts binder_code.indenter("require 'tzispa/rig/binder'\n\n")
+          level = 0
+          binder_namespace.split('::').each { |ns|
+            f.puts binder_code.indenter("module #{ns}\n", level > 0 ? 2 : 0).to_s
+            level += 1
+          }
+          f.puts binder_code.indenter("\nclass #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n", 2)
+          f.puts binder_code.indenter("def bind!", 2)
+          f.puts binder_code.indenter("end\n\n")
+          f.puts binder_code.unindenter("end", 2)
+          binder_namespace.split('::').each { |ns|
+            f.puts binder_code.unindenter("end\n", 2)
+          }
         } if @type == :block
       end
 
