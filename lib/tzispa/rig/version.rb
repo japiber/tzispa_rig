@@ -3,8 +3,8 @@
 module Tzispa
   module Rig
 
-    VERSION = '0.2.4'.freeze
-    GEM_NAME = 'tzispa_rig'.freeze
+    VERSION = '0.2.4'
+    GEM_NAME = 'tzispa_rig'
 
   end
 end
