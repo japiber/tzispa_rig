@@ -2,8 +2,11 @@ Tzispa Rig
 
 Rig templates implementation
 
-## v0.2.4
+## v0.2.5
 - Add template methods for use in cli
+
+## v0.2.4
+- allow loop_item binder without parameters
 
 ## v0.2.3
 - Fix in the api call regex syntax
