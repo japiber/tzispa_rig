@@ -104,10 +104,9 @@ module Tzispa
         "#{@domain.path}/rig/#{@type.to_s.downcase}#{'/'+@subdomain if @subdomain}"
       end
 
-      def create
+      def create(content='')
         FileUtils.mkdir_p(path) unless Dir.exist? path
-        puts "path = #{Dir.exist? path}"
-        super
+        super(content)
         create_binder
       end
 
