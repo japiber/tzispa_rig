@@ -22,8 +22,16 @@ To add templates to your app you can use cli coomands
 
 ### Variables and metavariables
 
-Template variables are specified with: <var:name/>
-And metavariables with: {%name%}, metavariables are used to make runtime template tags replacements
+Template variables are specified with:
+```
+<var:name/>
+```
+
+And metavariables with:
+```
+{%name%}
+```
+metavariables are used to make runtime template tags replacements
 
 ```html
 <fieldset>
@@ -68,7 +76,6 @@ def load_brand
 end
 ```
 
-
 ### Conditionals
 
 You can make decisions in your templates using conditionals:
@@ -94,14 +101,12 @@ In the binder you must define customer_exist
 
 ```ruby
 def bind!
-  idb = context.router_params[:id0]
+  idc = context.router_params[:id0]
   context.repository.use :ecomm_shop
-  brand = context.repository[:brand][idb]
-  data.customer_exist = !brand.nil?
+  customer = context.repository[:customer][idb]
+  data.customer_exist = !customer.nil?
 end
 ```
-
-
 
 ## Repeating
 
@@ -121,7 +126,7 @@ To repeat a part in the template
 </loop:lbrands>
 ```
 
-In the binder you must use 'loop_binder'
+In the binder you must use the 'loop_binder' method
 
 ```ruby
 
@@ -143,8 +148,6 @@ def load_brands
     }
   }
 end
-
-
 ```
 
 ## Building urls
@@ -155,9 +158,10 @@ Rig templates can build urls for you. There are 2 url types:
 
 Site urls: used to provide links to site pages
 
+```
 <purl:route_id/>
 <purl:route_id[param1=value,param2=value]/>
-
+```
 ```html
 <purl:site[layout=brands,title=brand-list]/>
 <purl:index/>
@@ -168,9 +172,10 @@ The route_id's area defined in the start.ru file
 
 Api urls: used to provide urls to the application Api
 
+```
 <api:handler:verb/>
 <api:handler:verb:predicate/>
-
+```
 ```html
 <api:customer:add:address/>
 

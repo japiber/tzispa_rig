@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.2.6
+- Add basic documentation
+
 ## v0.2.5
 - Add template methods for use in cli
 
