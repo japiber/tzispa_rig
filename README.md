@@ -2,6 +2,12 @@
 
 A general purpose template engine
 
+## Installation
+
+```shell
+% gem install tzispa
+```
+
 ## Rig template types
 
 There are 3 template types: layout, static and block:
@@ -31,8 +37,8 @@ And metavariables with:
 ```
 {%name%}
 ```
-metavariables are used to make runtime template tags replacements
 
+metavariables are used to make runtime template tags replacements
 ```html
 <fieldset>
   <div class='row'>
@@ -42,15 +48,13 @@ metavariables are used to make runtime template tags replacements
     </div>
     <div class='column column-20'>
       <label for='skey'>Código</label>
-      <input type='text' name='skey' id='skey' maxlength="16" value='{%skey%}'/>
+      <input type='text' name='skey' id='skey' maxlength="16" value='<var:skey/>'/>
     </div>
+    <a href='<purl:site[layout=brand_edit,title=edit-brand,id0={%idb%}]/>'><i class='fa fa-edit'></i></a>
   </div>
-....
-
 ```
 
-and in the template binder
-
+in the template binder
 ```ruby
 def bind!
   @idb = context.router_params[:id0]
@@ -67,18 +71,21 @@ def load_brand
   data(
     idb: brand.id,
     name: brand.name,
-    skey: brand.skey,
-    long_name: brand.long_name,
-    web: brand.web,
-    manual_order: brand.manual_order,
-    notes: brand.notes
+    skey: brand.skey
   )
 end
 ```
 
 ### Conditionals
 
-You can make decisions in your templates using conditionals:
+You can make decisions in your templates using template ife tag:
+```
+<ife:test> ..... <else:test/> .... </ife:test>
+
+or without the else part
+
+<ife:test> .....  </ife:test>
+```
 
 ```html
 <ife:customer_exist>
@@ -98,19 +105,23 @@ You can make decisions in your templates using conditionals:
 ```
 
 In the binder you must define customer_exist
-
 ```ruby
+
 def bind!
   idc = context.router_params[:id0]
   context.repository.use :ecomm_shop
   customer = context.repository[:customer][idb]
   data.customer_exist = !customer.nil?
 end
+
 ```
 
 ## Repeating
 
-To repeat a part in the template
+To repeat a part in the template use loop tag
+```
+<loop:ltag> ... </loop:ltag>
+```
 
 ```html
 <loop:lbrands>
@@ -127,7 +138,6 @@ To repeat a part in the template
 ```
 
 In the binder you must use the 'loop_binder' method
-
 ```ruby
 
 def bind!
@@ -150,7 +160,7 @@ def load_brands
 end
 ```
 
-## Building urls
+## Template URLs
 
 Rig templates can build urls for you. There are 2 url types:
 
@@ -162,6 +172,7 @@ Site urls: used to provide links to site pages
 <purl:route_id/>
 <purl:route_id[param1=value,param2=value]/>
 ```
+
 ```html
 <purl:site[layout=brands,title=brand-list]/>
 <purl:index/>
@@ -176,8 +187,56 @@ Api urls: used to provide urls to the application Api
 <api:handler:verb/>
 <api:handler:verb:predicate/>
 ```
+
 ```html
 <api:customer:add:address/>
 
 <api:brand:{%verb%}/>
+```
+
+## Building templates
+
+You can include block and static rig templates using these tags:
+```
+<blk:name[param1=value,param2=value, ... ]/>
+
+<static:name/>
+```
+
+As you can see, template parameters can be passed in the block tag.
+These parameters will be available in the binder.
+You can also use template subdomains using dot notation in the name
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <blk:metasense/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <static:comassert/>
+</head>
+<body>
+  <blk:header/>
+  <div class="container m-bot-35 m-top-25 clearfix">
+    <div class="row">
+       <div class="three columns m-bot-25">
+         <blk:sidebar/>
+       </div>
+       <div class="nine columns m-bot-25">
+       <blk:folder.edit[doc=dokum]/>
+       </div>
+    </div>
+  </div>
+  <static:footer/>
+  <static:footscripts/>
+</body>
+</html>
+```
+
+In the folder binder you can access template parameters
+```ruby
+def bind!
+  context.repository.use :quality_dok
+  @doctype = params[:doc]
+end
 ```
