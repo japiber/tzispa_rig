@@ -2,6 +2,7 @@
 
 require 'forwardable'
 require 'tzispa/utils/string'
+require_relative 'syntax'
 
 
 module Tzispa
@@ -313,24 +314,7 @@ module Tzispa
 
       EMPTY_STRING = ''
 
-      RIG_EMPTY = {
-        :flags => /<flags:(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])\/>/
-      }.freeze
-
-      RIG_EXPRESSIONS = {
-        :meta => /\{%([^%]+?)%\}/.freeze,
-        :var  => /<var(\[%[A-Z]?[0-9]*[a-z]\])?:(\w+)\/>/,
-        :purl => /<purl:(\w+(?:\.\w+)?)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/,
-        :api  => /<api:([^:\.]+(?:\.[^:]+)?):([^:\/]+)(?::([^:\/]+))?(?::([^\/]+))?\/>/
-      }.freeze
-
-      RIG_STATEMENTS = /(<(loop):(\w+)>(.*?)<\/loop:\3>)|(<(ife):(\w+)>(.*?)(<else:\7\/>(.*?))?<\/ife:\7>)/m
-
-      RIG_TEMPLATES = {
-        :blk    => /<(blk):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :iblk   => /<(iblk):(\w+):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?:(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/,
-        :static => /<(static):(\w+(?:\.\w+)?)(?:\[(\w+=[^,\]]+(?:,\w+=[^,\]]+)*)\])?\/>/
-      }.freeze
+      include Tzispa::Rig::Syntax
 
       attr_reader :flags, :template, :the_parsed
 
