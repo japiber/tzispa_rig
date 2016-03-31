@@ -3,6 +3,7 @@
 require 'forwardable'
 require 'fileutils'
 require 'tzispa/utils/string'
+require 'tzispa/utils/indenter'
 require 'tzispa/rig'
 
 module Tzispa
@@ -156,21 +157,27 @@ module Tzispa
 
       def create_binder
         ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
-          binder_code = TzString.new
-          f.puts binder_code.indenter("require 'tzispa/rig/binder'\n\n")
+          f.puts new_binder_code
+        } if @type == :block
+      end
+
+      def new_binder_code
+        Tzispa::Utils::Indenter.new(2).tap { |binder_code|
+          binder_code << "require 'tzispa/rig/binder'\n\n"
           level = 0
           binder_namespace.split('::').each { |ns|
-            f.puts binder_code.indenter("module #{ns}\n", level > 0 ? 2 : 0).to_s
+            binder_code.indent if level > 0
+            binder_code << "module #{ns}\n"
             level += 1
           }
-          f.puts binder_code.indenter("\nclass #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n", 2)
-          f.puts binder_code.indenter("def bind!", 2)
-          f.puts binder_code.indenter("end\n\n")
-          f.puts binder_code.unindenter("end", 2)
+          binder_code.indent << "\nclass #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n"
+          binder_code.indent << "def bind!\n"
+          binder_code << "end\n\n"
+          binder_code.unindent << "end\n"
           binder_namespace.split('::').each { |ns|
-            f.puts binder_code.unindenter("end\n", 2)
+            binder_code.unindent << "end\n"
           }
-        } if @type == :block
+        }.to_s
       end
 
     end
