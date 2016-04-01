@@ -4,6 +4,7 @@ require 'forwardable'
 require 'fileutils'
 require 'tzispa/utils/string'
 require 'tzispa/utils/indenter'
+require 'tzispa/utils/cache'
 require 'tzispa/rig'
 
 module Tzispa
@@ -27,7 +28,7 @@ module Tzispa
       end
 
       def modified?
-        @modified != File.mtime(@file)
+        @modified != ::File.mtime(@file)
       end
 
       def exist?
@@ -187,9 +188,9 @@ module Tzispa
 
       attr_reader :app
 
-      def initialize(app)
+      def initialize(app, cache_enabled, cache_size)
         @app = app
-        @pool= Hash.new
+        @cache = Tzispa::Utils::LRUCache.new(cache_size) if cache_enabled
         @mutex = Mutex.new
       end
 
@@ -206,14 +207,20 @@ module Tzispa
       end
 
       def rig_template(name, type, format, params, parent)
-        if @mutex.owned?
-          tpl = @pool["#{type}__#{name}"] || Template.new( name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self )
-          tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
+        if @cache
+          ktpl = "#{type}__#{name}".to_sym
+          if @mutex.owned?
+            tpl = @cache[ktpl] || Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
+            @cache[ktpl] = tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
+          else
+            @mutex.synchronize {
+              tpl = @cache[ktpl] || Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
+              @cache[ktpl] = tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
+            }
+          end
         else
-          @mutex.synchronize {
-            tpl = @pool["#{type}__#{name}"] || Template.new( name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self )
-            tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
-          }
+          tpl = Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
+          tpl.load!.parse!
         end
       end
 
