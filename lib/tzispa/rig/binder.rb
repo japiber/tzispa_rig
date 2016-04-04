@@ -71,7 +71,7 @@ module Tzispa
       end
 
       def self.for(template, context)
-        if template.is_block?
+        if template.bindable?
           binder_class = template.binder_class
           binder_class.new( template, context ) if binder_class
         else

@@ -112,16 +112,20 @@ module Tzispa
         create_binder
       end
 
-      def is_block?
+      def block?
         @type == :block
       end
 
-      def is_layout?
+      def layout?
         @type == :layout
       end
 
-      def is_static?
+      def static?
         @type == :static
+      end
+
+      def bindable?
+        block? || layout?
       end
 
       def params=(value)

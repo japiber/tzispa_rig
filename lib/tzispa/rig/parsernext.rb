@@ -327,7 +327,7 @@ module Tzispa
       def parse!
         @tags = nil
         parse_flags
-        if @template.is_block?
+        if @template.bindable?
           parse_statements
           parse_expressions
         end
@@ -378,7 +378,6 @@ module Tzispa
 
       def parse_statements
         @inner_text.gsub!(RIG_STATEMENTS) { |match|
-          #puts Regexp.last_match.inspect
           type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new)
           pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
           @the_parsed << pe.parse!
