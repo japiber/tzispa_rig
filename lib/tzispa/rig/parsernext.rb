@@ -28,8 +28,10 @@ module Tzispa
           ParsedMeta.new parser, type, match[1]
         when :var
           ParsedVar.new parser, type, match[1], match[2]
-        when :purl
+        when :url
           ParsedUrl.new parser, type, match[1], match[3]
+        when :purl
+          ParsedPurl.new parser, type, match[1], match[3]
         when :api
           ParsedApi.new parser, type, match[1], match[2], match[3], match[4]
         when :loop
@@ -101,7 +103,7 @@ module Tzispa
     end
 
 
-    class ParsedUrl < ParsedEntity
+    class ParsedPurl < ParsedEntity
 
       def initialize(parser, type, path_id, params)
         super(parser, type)
@@ -117,6 +119,25 @@ module Tzispa
       end
 
     end
+
+
+    class ParsedUrl < ParsedEntity
+
+      def initialize(parser, type, path_id, params)
+        super(parser, type)
+        @path_id = path_id.to_sym
+        @params = params
+      end
+
+      def render(binder)
+        b_params = @params.dup.gsub(RE_ANCHOR) { |match|
+          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
+        } if @params
+        binder.context.canonical_url @path_id, Parameters.new(b_params).data
+      end
+
+    end
+
 
 
     class ParsedApi < ParsedEntity
