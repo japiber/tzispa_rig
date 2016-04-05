@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.2.7
+- Add url template tag to build canonical urls
+
 ## v0.2.6
 - Add basic documentation
 
