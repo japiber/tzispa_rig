@@ -212,6 +212,7 @@ module Tzispa
 
       def rig_template(name, type, format, params, parent)
         if @cache
+          #todo: a modified template file not reloading if the container template isn't modified too
           ktpl = "#{type}__#{name}".to_sym
           if @mutex.owned?
             tpl = @cache[ktpl] || Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)

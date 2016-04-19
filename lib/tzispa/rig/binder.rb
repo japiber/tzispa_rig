@@ -73,7 +73,9 @@ module Tzispa
       def self.for(template, context)
         if template.bindable?
           binder_class = template.binder_class
-          binder_class.new( template, context ) if binder_class
+          binder_class.new(template, context).tap { |binder|
+            raise "#{binder_class} isn't a TemplateBinder" unless binder&.is_a? Tzispa::Rig::TemplateBinder
+          } if binder_class          
         else
           self.new(template, context)
         end
