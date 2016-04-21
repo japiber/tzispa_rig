@@ -245,6 +245,7 @@ module Tzispa
 
       def parse!
         @parsed_block = template.engine.block name: @id, parent: template
+        template.childrens << @parsed_block
         self
       end
 
@@ -277,6 +278,8 @@ module Tzispa
       def parse!
         @block_then = template.engine.block name: @id_then, parent: template
         @block_else = template.engine.block name: @id_else, parent: template
+        template.childrens << @block_then
+        template.childrens << @block_else
         self
       end
 
@@ -314,6 +317,7 @@ module Tzispa
 
       def parse!
         @parsed_static = template.engine.static name: @id, parent: template
+        template.childrens << @parsed_static
         self
       end
 

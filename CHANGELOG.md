@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.2.9
+- Fix bugs in template cache engine causing modified template files are not reloading
+- Replaces Tzispa::Utils::Cache with lru_redex gem
+
 ## v0.2.7
 - Add url template tag to build canonical urls
 

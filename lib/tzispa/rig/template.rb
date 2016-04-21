@@ -4,7 +4,6 @@ require 'forwardable'
 require 'fileutils'
 require 'tzispa/utils/string'
 require 'tzispa/utils/indenter'
-require 'tzispa/utils/cache'
 require 'tzispa/rig'
 
 module Tzispa
@@ -68,7 +67,7 @@ module Tzispa
       DEFAULT_FORMAT = 'htm'.freeze
       RIG_EXTENSION  = 'rig'.freeze
 
-      attr_reader :name, :type, :domain, :format, :params, :parser, :engine, :subdomain
+      attr_reader :name, :type, :domain, :format, :params, :parser, :engine, :subdomain, :childrens
       def_delegators :@parser, :attribute_tags
 
       def initialize(name:, type:, domain: nil, parent: nil, format: nil, params: nil, engine: nil)
@@ -76,6 +75,7 @@ module Tzispa
         @subdomain = subdom_name.first if subdom_name.length > 1
         @name = subdom_name.last
         @params = Parameters.new(params)
+        @childrens = Array.new
         send('type=', type)
         if parent
           @engine = engine || parent.engine
@@ -93,6 +93,12 @@ module Tzispa
         @parser = ParserNext.new self
         @parser.parse!
         self
+      end
+
+      def modified?
+        super || (childrens.count > 0 && childrens.index { |tpl|
+          tpl.modified?
+        })
       end
 
       def render(context)
@@ -187,49 +193,6 @@ module Tzispa
 
     end
 
-
-    class Engine
-
-      attr_reader :app
-
-      def initialize(app, cache_enabled, cache_size)
-        @app = app
-        @cache = Tzispa::Utils::LRUCache.new(cache_size) if cache_enabled
-        @mutex = Mutex.new
-      end
-
-      def layout(name:, format:nil, params:nil)
-        rig_template name, :layout, format, params, nil
-      end
-
-      def block(name:, format:nil, params:nil, parent:nil)
-        rig_template name, :block, format, params, parent
-      end
-
-      def static(name:, format:nil, params:nil, parent:nil)
-        rig_template name, :static, format, params, parent
-      end
-
-      def rig_template(name, type, format, params, parent)
-        if @cache
-          #todo: a modified template file not reloading if the container template isn't modified too
-          ktpl = "#{type}__#{name}".to_sym
-          if @mutex.owned?
-            tpl = @cache[ktpl] || Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
-            @cache[ktpl] = tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
-          else
-            @mutex.synchronize {
-              tpl = @cache[ktpl] || Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
-              @cache[ktpl] = tpl.loaded? && !tpl.modified? ? tpl : tpl.load!.parse!
-            }
-          end
-        else
-          tpl = Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self)
-          tpl.load!.parse!
-        end
-      end
-
-    end
 
   end
 end
