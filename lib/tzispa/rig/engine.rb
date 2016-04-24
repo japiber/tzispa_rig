@@ -31,13 +31,9 @@ module Tzispa
 
       def rig_template(name, type, tpl_format, params, parent)
         if @cache
-          if @mutex.owned?
-            cache_template(name, type, tpl_format, params, parent)
-          else
-            @mutex.synchronize {
-              cache_template(name, type, tpl_format, params, parent)
-            }
-          end
+          @mutex.owned? ?
+            cache_template(name, type, tpl_format, params, parent) :
+            @mutex.synchronize { cache_template(name, type, tpl_format, params, parent)  }
         else
           Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self).load!.parse!
         end
