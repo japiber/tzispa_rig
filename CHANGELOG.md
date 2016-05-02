@@ -2,6 +2,11 @@ Tzispa Rig
 
 Rig templates implementation
 
+## 0.3.0
+- Separate engine class into independant ruby file
+- Move rig url builder tags into independant parser category
+- Now static blocks can parse url builder tags: url, purl & api
+
 ## v0.2.9
 - Fix bugs in template cache engine causing modified template files are not reloading
 - Replaces Tzispa::Utils::Cache with lru_redex gem
