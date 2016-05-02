@@ -356,6 +356,7 @@ module Tzispa
           parse_statements
           parse_expressions
         end
+        parse_url_builder
         parse_templates
         self
       end
@@ -388,6 +389,16 @@ module Tzispa
         @inner_text.gsub!(RIG_EMPTY[:flags]) { |match|
           @flags = Regexp.last_match(1)
           EMPTY_STRING
+        }
+      end
+
+      def parse_url_builder
+        RIG_URL_BUILDER.each_key { |kre|
+          @inner_text.gsub!(RIG_URL_BUILDER[kre]) { |match|
+            pe = ParsedEntity.instance(self, kre, Regexp.last_match )
+            @the_parsed << pe
+            pe.anchor
+          }
         }
       end
 
