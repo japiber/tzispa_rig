@@ -2,8 +2,11 @@ Tzispa Rig
 
 Rig templates implementation
 
+## 0.3.2
+- Fix error bad format parameter when engine template cache is disabled
+
 ## 0.3.1
-- Fix error in engine template cache that was losing template params when a template was recovered form cache
+- Fix error in engine template cache that was losing template params when a template was recovered from cache
 
 ## 0.3.0
 - Separate engine class into independant ruby file

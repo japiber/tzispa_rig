@@ -32,28 +32,26 @@ module Tzispa
       def rig_template(name, type, tpl_format, params, parent)
         if @cache
           if @mutex.owned?
-            cache_template(name, type, tpl_format, parent, params)
+            cache_template(name, type, tpl_format, params, parent)
           else
             @mutex.synchronize {
-              cache_template(name, type, tpl_format, parent, params)
+              cache_template(name, type, tpl_format, params, parent)
             }
           end
         else
-          Template.new(name: name, type: type, format: format, domain: @app.domain, params: params, parent: parent, engine: self).load!.parse!
+          Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, params: params, parent: parent, engine: self).load!.parse!
         end
       end
 
       private
 
-      def cache_template(name, type, tpl_format, parent, params)
+      def cache_template(name, type, tpl_format, params, parent)
         ktpl = "#{type}__#{name}".to_sym
         tpl = @cache.getset(ktpl) {
           Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, parent: parent, engine: self).load!.parse!
         }
         if tpl.modified?
-          @cache[ktpl] = tpl.load!.parse!
-        else
-          tpl
+          tpl = @cache[ktpl] = Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, parent: parent, engine: self).load!.parse!
         end
         tpl.dup.tap { |ctpl|
            ctpl.params = params if params
