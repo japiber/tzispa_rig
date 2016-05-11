@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## 0.3.1
+- Fix error in engine template cache that was losing template params when a template was recovered form cache
+
 ## 0.3.0
 - Separate engine class into independant ruby file
 - Move rig url builder tags into independant parser category
