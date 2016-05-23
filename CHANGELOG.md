@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## 0.3.3
+- Raise a custom exception when a binder tag does not exists in the template
+- Raise custom exception when there are duplicated loops in binder
+
 ## 0.3.2
 - Fix error bad format parameter when engine template cache is disabled
 

@@ -7,10 +7,14 @@ module Tzispa
   module Rig
 
 
+    class UnknownTag < NameError; end
+    class DuplicatedLoop < StandardError; end
+
+
     class Binder
       extend Forwardable
 
-      attr_reader :context, :dataStruct, :parser
+      attr_reader :context, :dataStruct, :tags, :parser
       def_delegators :@parser, :attribute_tags
       def_delegators :@context, :app, :request, :response
 
@@ -20,6 +24,8 @@ module Tzispa
         @context = context
         @dataStruct = attribute_tags.count > 0 ? Struct.new(*attribute_tags) : Struct.new(nil)
       end
+
+      alias :tags :attribute_tags
 
       # Gets a LoopBinder context for the given loop_id in a rig template
       #
@@ -42,8 +48,8 @@ module Tzispa
       #
       def loop_binder(loop_id)
         loop_parser = @parser.loop_parser loop_id
-        raise ArgumentError.new("#{self.class}:: there isn't any loop tagged '#{loop_id}'") unless loop_parser && loop_parser.count > 0
-        raise ArgumentError.new("#{self.class}:: there are #{loop_parser.count} loops tagged '#{loop_id}' at the same level: only one allowed") unless loop_parser.count == 1
+        raise UnknownTag.new("#{self.class.name} there isn't any loop tagged '#{loop_id}'") unless loop_parser && loop_parser.count > 0
+        raise DuplicatedLoop.new("#{self.class.name} there are #{loop_parser.count} loops tagged '#{loop_id}' at the same level: only one allowed") unless loop_parser.count == 1
         LoopBinder.new loop_parser[0], @context
       end
 
@@ -65,6 +71,7 @@ module Tzispa
       def data(**params)
         (@data ||= @dataStruct.new).tap { |d|
           params.each{ |k,v|
+            raise UnknownTag.new "#{k} is not a tag in #{self.class.name}" unless tags.include? k
             d[k] = v
           }
         }
@@ -74,8 +81,8 @@ module Tzispa
         if template.bindable?
           binder_class = template.binder_class
           binder_class.new(template, context).tap { |binder|
-            raise "#{binder_class} isn't a TemplateBinder" unless binder&.is_a? Tzispa::Rig::TemplateBinder
-          } if binder_class          
+            raise ArgumentError.new "#{binder_class.name} isn't a TemplateBinder" unless binder&.is_a? Tzispa::Rig::TemplateBinder
+          } if binder_class
         else
           self.new(template, context)
         end
@@ -101,6 +108,7 @@ module Tzispa
       def loop_item(params=nil)
         (LoopItem.new self).tap { |item|
           params.each{ |k,v|
+            raise UnknownTag.new "#{k} is not a tag in #{self.class.name}" unless tags.include? k
             item.data[k] = v
           } if params
         }
