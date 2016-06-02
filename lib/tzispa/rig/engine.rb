@@ -13,8 +13,7 @@ module Tzispa
 
       def initialize(app, cache_enabled, cache_size)
         @app = app
-        @cache = LruRedux::Cache.new(cache_size) if cache_enabled
-        @mutex = Mutex.new
+        @cache = LruRedux::ThreadSafeCache.new(cache_size) if cache_enabled
       end
 
       def layout(name:, format:nil, params:nil)
@@ -31,13 +30,7 @@ module Tzispa
 
       def rig_template(name, type, tpl_format, params, parent)
         if @cache
-          if @mutex.owned?
-            cache_template(name, type, tpl_format, params, parent)
-          else
-            @mutex.synchronize {
-              cache_template(name, type, tpl_format, params, parent)
-            }
-          end
+          cache_template(name, type, tpl_format, params, parent)
         else
           Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, params: params, parent: parent, engine: self).load!.parse!
         end
@@ -46,16 +39,23 @@ module Tzispa
       private
 
       def cache_template(name, type, tpl_format, params, parent)
-        ktpl = "#{type}__#{name}".to_sym
-        tpl = @cache.getset(ktpl) {
-          Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, parent: parent, engine: self).load!.parse!
-        }
-        if tpl.modified?
-          tpl = @cache[ktpl] = Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, parent: parent, engine: self).load!.parse!
-        end
-        tpl.dup.tap { |ctpl|
+        key = "#{type}__#{name}".to_sym
+        (get_template(key, name, type, tpl_format, parent) || set_template(key, name, type, tpl_format, parent)).dup.tap { |ctpl|
            ctpl.params = params if params
          }
+      end
+
+      def get_template(key, name, type, tpl_format, parent)
+        if @cache.key?(key) && (@cache[key].modified? || !@cache[key].valid?)
+          set_template(key, name, type, tpl_format, parent)
+        else
+          @cache[key]
+        end
+      end
+
+
+      def set_template(key, name, type, tpl_format, parent)
+        @cache[key] = Template.new(name: name, type: type, format: tpl_format, domain: @app.domain, parent: parent, engine: self).load!.parse!
       end
 
     end

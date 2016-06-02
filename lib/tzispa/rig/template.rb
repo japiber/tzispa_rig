@@ -101,6 +101,10 @@ module Tzispa
         })
       end
 
+      def valid?
+        !content.empty? && !parser.empty?
+      end
+
       def render(context)
         parse! unless @parser
         binder = TemplateBinder.for self, context

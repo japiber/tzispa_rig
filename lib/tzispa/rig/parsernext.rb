@@ -349,6 +349,10 @@ module Tzispa
         @the_parsed = Array.new
       end
 
+      def empty?
+        @the_parsed.empty?
+      end
+
       def parse!
         @tags = nil
         parse_flags
