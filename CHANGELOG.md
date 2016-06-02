@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## 0.3.4
+- fix template cache returning empty template sometimes
+
 ## 0.3.3
 - Raise a custom exception when a binder tag does not exists in the template
 - Raise custom exception when there are duplicated loops in binder
