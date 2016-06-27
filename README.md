@@ -66,8 +66,7 @@ private
 attr_reader :idb
 
 def load_brand
-  context.repository.use :ecomm_shop
-  brand = context.repository[:brand][idb]
+  brand = context.repository[:brand, :ecomm_shop][idb]
   data(
     idb: brand.id,
     name: brand.name,
@@ -109,8 +108,7 @@ In the binder you must define customer_exist
 
 def bind!
   idc = context.router_params[:id0]
-  context.repository.use :ecomm_shop
-  customer = context.repository[:customer][idb]
+  customer = context.repository[:customer, :ecomm_shop][idb]
   data.customer_exist = !customer.nil?
 end
 
@@ -131,7 +129,7 @@ To repeat a part in the template use loop tag
   <td><var:name/></td>
   <td class='text-right'>
     <a href='<purl:site[layout=brand_edit,title=edit-brand,id0={%id%}]/>'><i class='fa fa-edit'></i></a>
-    <a href='javascript:delete_brand("<api:brand:delete:{%id%}/>")'><i class='fa fa-trash'></i></a>
+    <a href='javascript:delete_brand("<sapi:brand:delete:{%id%}/>")'><i class='fa fa-trash'></i></a>
   </td>
 <tr>
 </loop:lbrands>
@@ -148,8 +146,7 @@ private
 
 def load_brands
   Proc.new {
-    context.repository.use :ecomm_shop
-    context.repository[:brand].list.map { |b|
+    context.repository[:brand, :ecomm_shop].list.map { |b|
       loop_item(
         id: b.id,
         skey: b.skey,
@@ -184,14 +181,14 @@ The route_id's area defined in the start.ru file
 Api urls: used to provide urls to the application Api
 
 ```
-<api:handler:verb/>
-<api:handler:verb:predicate/>
+<sapi:handler:verb/>
+<sapi:handler:verb:predicate/>
 ```
 
 ```html
-<api:customer:add:address/>
+<sapi:customer:add:address/>
 
-<api:brand:{%verb%}/>
+<sapi:brand:{%verb%}/>
 ```
 
 ## Building templates
@@ -236,7 +233,6 @@ You can also use template subdomains using dot notation in the name
 In the folder binder you can access template parameters
 ```ruby
 def bind!
-  context.repository.use :quality_dok
   @doctype = params[:doc]
 end
 ```

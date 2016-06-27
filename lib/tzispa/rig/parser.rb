@@ -24,7 +24,7 @@ module Tzispa
         :re_loop    => /<loop:(\w+)>(.*?)<\/loop:\1>/m.freeze,
         :re_ife     => /<ife:(\w+)>(.*?)(<else:\1\/>(.*?))?<\/ife:\1>/m.freeze,
         :re_purl    => /<purl:(\w+)(\[(\w+=[^,\]]+(,\w+=[^,\]]+)*?)\])?\/>/.freeze,
-        :re_api     => /<api:(\w+(?:\.\w+)?):(\w+)(?::([^:]+))?(?::([^\/]+))?\/>/.freeze
+        :re_api     => /<sapi:(\w+(?:\.\w+)?):(\w+)(?::([^:]+))?(?::([^\/]+))?\/>/.freeze
       }
 
       def initialize(engine, binder=nil, text=nil)

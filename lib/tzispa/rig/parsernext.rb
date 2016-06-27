@@ -29,11 +29,9 @@ module Tzispa
         when :var
           ParsedVar.new parser, type, match[1], match[2]
         when :url
-          ParsedUrl.new parser, type, match[1], match[3]
-        when :purl
-          ParsedPurl.new parser, type, match[1], match[3]
+          ParsedUrl.new parser, match[1].to_sym, match[2], match[4]
         when :api
-          ParsedApi.new parser, type, match[1], match[2], match[3], match[4]
+          ParsedApi.new parser, match[1].to_sym, match[2], match[3], match[4], match[5]
         when :loop
           ParsedLoop.new parser, type, match[3], match[4]
         when :ife
@@ -103,24 +101,6 @@ module Tzispa
     end
 
 
-    class ParsedPurl < ParsedEntity
-
-      def initialize(parser, type, path_id, params)
-        super(parser, type)
-        @path_id = path_id.to_sym
-        @params = params
-      end
-
-      def render(binder)
-        b_params = @params.dup.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        } if @params
-        binder.context.path @path_id, Parameters.new(b_params).data
-      end
-
-    end
-
-
     class ParsedUrl < ParsedEntity
 
       def initialize(parser, type, path_id, params)
@@ -133,11 +113,15 @@ module Tzispa
         b_params = @params.dup.gsub(RE_ANCHOR) { |match|
           parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
         } if @params
-        binder.context.canonical_url @path_id, Parameters.new(b_params).data
+        case type
+        when :purl
+          binder.context.path @path_id, Parameters.new(b_params).data
+        when :url
+          binder.context.canonical_url @path_id, Parameters.new(b_params).data
+        end
       end
 
     end
-
 
 
     class ParsedApi < ParsedEntity
@@ -157,7 +141,7 @@ module Tzispa
         b_verb = bind_value @verb.dup, binder
         b_predicate = bind_value( @predicate.dup, binder ) if @predicate
         b_sufix = bind_value( @sufix.dup, binder ) if @sufix
-        binder.context.api b_handler, b_verb, b_predicate, b_sufix
+        binder.context.send(type.to_sym, b_handler, b_verb, b_predicate, b_sufix)
       end
 
       private
