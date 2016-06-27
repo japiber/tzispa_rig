@@ -2,20 +2,23 @@ Tzispa Rig
 
 Rig templates implementation
 
-## 0.3.4
+## v0.4.0
+- add suport for signed/unsigned api calls
+
+## v0.3.4
 - fix template cache returning empty template sometimes
 
-## 0.3.3
+## v0.3.3
 - Raise a custom exception when a binder tag does not exists in the template
 - Raise custom exception when there are duplicated loops in binder
 
-## 0.3.2
+## v0.3.2
 - Fix error bad format parameter when engine template cache is disabled
 
-## 0.3.1
+## v0.3.1
 - Fix error in engine template cache that was losing template params when a template was recovered from cache
 
-## 0.3.0
+## v0.3.0
 - Separate engine class into independant ruby file
 - Move rig url builder tags into independant parser category
 - Now static blocks can parse url builder tags: url, purl & api
