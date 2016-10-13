@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.4.1
+- add inter-app calls for url and api tags
+
 ## v0.4.0
 - add suport for signed/unsigned api calls
 
