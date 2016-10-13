@@ -43,6 +43,7 @@ module Tzispa
             while line = f.gets
               @content << line
             end
+            f.close
           }
           @loaded = true
         rescue Errno::ENOENT

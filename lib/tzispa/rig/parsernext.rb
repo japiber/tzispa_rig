@@ -29,9 +29,9 @@ module Tzispa
         when :var
           ParsedVar.new parser, type, match[1], match[2]
         when :url
-          ParsedUrl.new parser, match[1].to_sym, match[2], match[4]
+          ParsedUrl.new parser, match[1].to_sym, match[3], match[5], match[2]&.slice(1..-1)&.to_sym
         when :api
-          ParsedApi.new parser, match[1].to_sym, match[2], match[3], match[4], match[5]
+          ParsedApi.new parser, match[1].to_sym, match[3], match[4], match[5], match[6], match[2]&.slice(1..-1)&.to_sym
         when :loop
           ParsedLoop.new parser, type, match[3], match[4]
         when :ife
@@ -103,10 +103,13 @@ module Tzispa
 
     class ParsedUrl < ParsedEntity
 
-      def initialize(parser, type, path_id, params)
+      attr_reader :path_id, :params, :app_name
+
+      def initialize(parser, type, path_id, params, app_name = nil)
         super(parser, type)
         @path_id = path_id.to_sym
         @params = params
+        @app_name = app_name
       end
 
       def render(binder)
@@ -115,9 +118,13 @@ module Tzispa
         } if @params
         case type
         when :purl
-          binder.context.path @path_id, Parameters.new(b_params).data
+          app_name ?
+            binder.context.app_path(app_name, @path_id, Parameters.new(b_params).tp_h) :
+            binder.context.path(@path_id, Parameters.new(b_params).to_h)
         when :url
-          binder.context.canonical_url @path_id, Parameters.new(b_params).data
+          app_name ?
+            binder.context.app_canonical_url(app_name, @path_id, Parameters.new(b_params).to_h) :
+            binder.context.canonical_url(@path_id, Parameters.new(b_params).to_h)
         end
       end
 
@@ -126,14 +133,15 @@ module Tzispa
 
     class ParsedApi < ParsedEntity
 
-      attr_reader :handler, :verb, :predicate
+      attr_reader :handler, :verb, :predicate, :app_name
 
-      def initialize(parser, type, handler, verb, predicate, sufix)
+      def initialize(parser, type, handler, verb, predicate, sufix, app_name = nil)
         super(parser, type)
         @handler = handler
         @verb = verb
         @predicate = predicate
         @sufix = sufix
+        @app_name = app_name
       end
 
       def render(binder)
@@ -141,7 +149,7 @@ module Tzispa
         b_verb = bind_value @verb.dup, binder
         b_predicate = bind_value( @predicate.dup, binder ) if @predicate
         b_sufix = bind_value( @sufix.dup, binder ) if @sufix
-        binder.context.send(type.to_sym, b_handler, b_verb, b_predicate, b_sufix)
+        binder.context.send(type.to_sym, b_handler, b_verb, b_predicate, b_sufix, app_name)
       end
 
       private

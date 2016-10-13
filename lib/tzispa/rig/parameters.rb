@@ -2,18 +2,15 @@
 
 module Tzispa
   module Rig
+
     class Parameters
 
+      attr_reader :inner, :outer
 
-      attr_reader :inner
-      attr_reader :outer
-      attr_reader :data
-
-
-      def initialize(params=nil, iouter=',', iinner='=')
+      def initialize(params=nil, outer=',', inner='=')
         @data = Hash.new
-        @outer = iouter
-        @inner = iinner
+        @outer = outer
+        @inner = inner
         setData(params) if params
       end
 
@@ -36,6 +33,12 @@ module Tzispa
       def to_s
         @data.map { |k,v| "#{k}#{inner}#{v}" }.join(outer)
       end
+
+      def to_h
+        @data
+      end
+
+      alias_method :data, :to_h
 
       def merge(params)
         setData(params)
