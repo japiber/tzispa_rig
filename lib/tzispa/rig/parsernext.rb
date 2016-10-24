@@ -103,11 +103,11 @@ module Tzispa
 
     class ParsedUrl < ParsedEntity
 
-      attr_reader :path_id, :params, :app_name
+      attr_reader :layout, :params, :app_name
 
-      def initialize(parser, type, path_id, params, app_name = nil)
+      def initialize(parser, type, layout, params, app_name = nil)
         super(parser, type)
-        @path_id = path_id.to_sym
+        @layout = layout
         @params = params
         @app_name = app_name
       end
@@ -116,17 +116,25 @@ module Tzispa
         b_params = @params.dup.gsub(RE_ANCHOR) { |match|
           parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
         } if @params
+        b_layout = bind_value(@layout.dup, binder).to_sym
         case type
         when :purl
           app_name ?
-            binder.context.app_path(app_name, @path_id, Parameters.new(b_params).tp_h) :
-            binder.context.path(@path_id, Parameters.new(b_params).to_h)
+            binder.context.app_layout_path(app_name, b_layout, Parameters.new(b_params).tp_h) :
+            binder.context.layout_path(b_layout, Parameters.new(b_params).to_h)
         when :url
           app_name ?
-            binder.context.app_canonical_url(app_name, @path_id, Parameters.new(b_params).to_h) :
-            binder.context.canonical_url(@path_id, Parameters.new(b_params).to_h)
+            binder.context.app_layout_canonical_url(app_name, b_layout, Parameters.new(b_params).to_h) :
+            binder.context.layout_canonical_url(b_layout, Parameters.new(b_params).to_h)
         end
       end
+
+      def bind_value(value, binder)
+        value.gsub(RE_ANCHOR) { |match|
+          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
+        }
+      end
+
 
     end
 
