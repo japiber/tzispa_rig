@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.4.2
+- add support for metavars in purl/url tag id
+
 ## v0.4.1
 - add inter-app calls for url and api tags
 
