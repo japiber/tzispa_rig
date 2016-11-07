@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.4.3
+- add config and repository delegators into context
+- updated rig templates documentation
+
 ## v0.4.2
 - add support for metavars in purl/url tag id
 
