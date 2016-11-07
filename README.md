@@ -56,6 +56,8 @@ metavariables are used to make runtime template tags replacements
 
 in the template binder
 ```ruby
+
+
 def bind!
   @idb = context.router_params[:id0]
   load_brand if idb
@@ -163,7 +165,7 @@ Rig templates can build urls for you. There are 2 url types:
 
 ### purl
 
-Site urls: used to provide links to site pages (layouts)
+Site path urls: used to provide links to site pages (layouts)
 
 ```
 <purl:route_id/>
@@ -174,11 +176,46 @@ Site urls: used to provide links to site pages (layouts)
 <purl:brands[title=brand-list]/>
 <purl:index/>
 ```
-The route_id's area defined in the start.ru file
+
+### url
+
+Site full urls: used to provide links to site pages (layouts)
+
+```
+<url:route_id/>
+<url:route_id[param1=value,param2=value]/>
+```
+
+```html
+<url:brand_edit[title=brand-edit,idb={%brand_id%}]/>
+<url:index/>
+```
+
+The purl/url route_id/layout's must be defined in the start.ru file with route_rig_layout(layout_id, path_pattern)
+
+```ruby
+
+route_rig_layout      :brands,       '/:title/:layout(.:format)'
+route_rig_layout      :brand_edit,   '/:title/:idb/:layout(.:format)'
+
+```
 
 ### api
 
 Api urls: used to provide urls to the application Api
+
+```
+<api:handler:verb/>
+<api:handler:verb:predicate/>
+```
+
+```html
+<api:customer:add:address/>
+
+<api:brand:{%verb%}/>
+```
+
+You can also use 'sapi' to automagically provide signed api urls in your apps
 
 ```
 <sapi:handler:verb/>
@@ -190,6 +227,7 @@ Api urls: used to provide urls to the application Api
 
 <sapi:brand:{%verb%}/>
 ```
+
 
 ## Building templates
 
