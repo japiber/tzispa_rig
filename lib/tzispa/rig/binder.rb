@@ -16,7 +16,7 @@ module Tzispa
 
       attr_reader :context, :dataStruct, :tags, :parser
       def_delegators :@parser, :attribute_tags
-      def_delegators :@context, :app, :request, :response
+      def_delegators :@context, :app, :request, :response, :repository, :config
 
 
       def initialize(parser, context)
