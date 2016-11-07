@@ -50,7 +50,7 @@ metavariables are used to make runtime template tags replacements
       <label for='skey'>Código</label>
       <input type='text' name='skey' id='skey' maxlength="16" value='<var:skey/>'/>
     </div>
-    <a href='<purl:site[layout=brand_edit,title=edit-brand,id0={%idb%}]/>'><i class='fa fa-edit'></i></a>
+    <a href='<purl:brand_edit[title=edit-brand,id0={%idb%}]/>'><i class='fa fa-edit'></i></a>
   </div>
 ```
 
@@ -128,7 +128,7 @@ To repeat a part in the template use loop tag
   <td><var:skey/></td>
   <td><var:name/></td>
   <td class='text-right'>
-    <a href='<purl:site[layout=brand_edit,title=edit-brand,id0={%id%}]/>'><i class='fa fa-edit'></i></a>
+    <a href='<purl:brand_edit[title=edit-brand,id0={%id%}]/>'><i class='fa fa-edit'></i></a>
     <a href='javascript:delete_brand("<sapi:brand:delete:{%id%}/>")'><i class='fa fa-trash'></i></a>
   </td>
 <tr>
@@ -163,7 +163,7 @@ Rig templates can build urls for you. There are 2 url types:
 
 ### purl
 
-Site urls: used to provide links to site pages
+Site urls: used to provide links to site pages (layouts)
 
 ```
 <purl:route_id/>
@@ -171,7 +171,7 @@ Site urls: used to provide links to site pages
 ```
 
 ```html
-<purl:site[layout=brands,title=brand-list]/>
+<purl:brands[title=brand-list]/>
 <purl:index/>
 ```
 The route_id's area defined in the start.ru file
