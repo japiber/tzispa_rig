@@ -173,11 +173,11 @@ module Tzispa
 
       def create_binder
         ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
-          f.puts new_binder_code
+          f.puts write_binder_code
         } if @type == :block
       end
 
-      def new_binder_code
+      def write_binder_code
         Tzispa::Utils::Indenter.new(2).tap { |binder_code|
           binder_code << "require 'tzispa/rig/binder'\n\n"
           level = 0
