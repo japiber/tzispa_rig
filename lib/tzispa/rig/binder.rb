@@ -14,15 +14,16 @@ module Tzispa
     class Binder
       extend Forwardable
 
-      attr_reader :context, :dataStruct, :tags, :parser
+      attr_reader :context, :data_struct, :tags, :parser
       def_delegators :@parser, :attribute_tags
-      def_delegators :@context, :app, :request, :response, :repository, :config
+      def_delegators :@context, :app, :request, :response, :session, :router_params, :not_found
+      def_delegators :app, :repository, :config, :logger
 
 
       def initialize(parser, context)
         @parser = parser
         @context = context
-        @dataStruct = attribute_tags.count > 0 ? Struct.new(*attribute_tags) : Struct.new(nil)
+        @data_struct = attribute_tags.count > 0 ? Struct.new(*attribute_tags) : Struct.new(nil)
       end
 
       alias :tags :attribute_tags
@@ -69,7 +70,7 @@ module Tzispa
       end
 
       def data(**params)
-        (@data ||= @dataStruct.new).tap { |d|
+        (@data ||= @data_struct.new).tap { |d|
           params.each{ |k,v|
             raise UnknownTag.new "#{k} is not a tag in #{self.class.name}" unless tags.include? k
             d[k] = v
@@ -123,7 +124,7 @@ module Tzispa
 
       def initialize(binder)
         @context = binder.context
-        @data = binder.dataStruct.new
+        @data = binder.data_struct.new
       end
 
     end
