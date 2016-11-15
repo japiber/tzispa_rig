@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.4.4
+- add session,router_params,not_found&logger delegators to make template binders less contextized
+- remove unused gem dependencies and code (old parser)
+
 ## v0.4.3
 - add config and repository delegators into context
 - updated rig templates documentation
