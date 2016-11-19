@@ -64,6 +64,8 @@ module Tzispa
     class Template < File
       extend Forwardable
 
+      using Tzispa::Utils
+
       BASIC_TYPES    = [:layout, :block, :static].freeze
       DEFAULT_FORMAT = 'htm'.freeze
       RIG_EXTENSION  = 'rig'.freeze
@@ -152,16 +154,16 @@ module Tzispa
       end
 
       def binder_namespace
-        "#{TzString.camelize @domain.name}::Rig::#{@type.to_s.capitalize}#{'::' + TzString.camelize(@subdomain) if @subdomain}"
+        "#{@domain.name.to_s.camelize}::Rig::#{@type.to_s.capitalize}#{'::' + @subdomain.camelize if @subdomain}"
       end
 
       def binder_class_name
-        TzString.camelize @name
+        @name.camelize
       end
 
       def binder_class
         @domain.require binder_require
-        TzString.constantize "#{binder_namespace}::#{binder_class_name}"
+        "#{binder_namespace}::#{binder_class_name}".constantize
       end
 
       private
