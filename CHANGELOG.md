@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.4.5
+- code fixes for replacing TzString with String refinement
+
 ## v0.4.4
 - add session,router_params,not_found&logger delegators to make template binders less contextized
 - remove unused gem dependencies and code (old parser)
