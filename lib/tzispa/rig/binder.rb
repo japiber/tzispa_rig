@@ -69,8 +69,12 @@ module Tzispa
         @template = template
       end
 
-      def data(**params)
-        (@data ||= @data_struct.new).tap { |d|
+      def data
+        @data ||= @data_struct.new
+      end
+
+      def attach(**params)
+        data.tap { |d|
           params.each{ |k,v|
             raise UnknownTag.new "#{k} is not a tag in #{self.class.name}" unless tags.include? k
             d[k] = v
