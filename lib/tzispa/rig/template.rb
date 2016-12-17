@@ -4,7 +4,6 @@ require 'forwardable'
 require 'fileutils'
 require 'tzispa/utils/string'
 require 'tzispa/utils/indenter'
-require 'tzispa/rig'
 
 module Tzispa
   module Rig
@@ -27,7 +26,7 @@ module Tzispa
       end
 
       def modified?
-        @modified != ::File.mtime(@file)
+        @modified && (@modified != ::File.mtime(@file))
       end
 
       def exist?
@@ -35,21 +34,19 @@ module Tzispa
       end
 
       def load!
-        begin
-          raise NotFound.new("Template file '#{@file}' not found") unless exist?
-          ::File.open(@file, 'r:UTF-8') { |f|
-            @content = String.new
-            @modified = f.mtime
-            while line = f.gets
-              @content << line
-            end
-            f.close
-          }
-          @loaded = true
-        rescue Errno::ENOENT
-          raise ReadError.new "Template file '#{@file}' could not be read"
-        end
+        raise NotFound.new("Template file '#{@file}' not found") unless exist?
+        ::File.open(@file, 'r:UTF-8') { |f|
+          @content = String.new
+          @modified = f.mtime
+          while line = f.gets
+            @content << line
+          end
+          f.close
+        }
+        @loaded = true
         self
+      rescue Errno::ENOENT
+        raise ReadError.new "Template file '#{@file}' could not be read"
       end
 
       def create(content=nil)
@@ -70,7 +67,7 @@ module Tzispa
       DEFAULT_FORMAT = 'htm'.freeze
       RIG_EXTENSION  = 'rig'.freeze
 
-      attr_reader :name, :type, :domain, :format, :params, :parser, :engine, :subdomain, :childrens
+      attr_reader :name, :type, :domain, :format, :parser, :engine, :subdomain, :childrens
       def_delegators :@parser, :attribute_tags
 
       def initialize(name:, type:, domain: nil, parent: nil, format: nil, params: nil, engine: nil)

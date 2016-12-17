@@ -1,8 +1,6 @@
 # frozen_string_literal: true
-
-require 'tzispa/rig'
 require 'lru_redux'
-
+require 'tzispa/rig/template'
 
 module Tzispa
   module Rig

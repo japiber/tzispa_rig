@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'tzispa/rig'
 
 module Tzispa
   module Rig
@@ -14,7 +13,7 @@ module Tzispa
     class Binder
       extend Forwardable
 
-      attr_reader :context, :data_struct, :tags, :parser
+      attr_reader :context, :data_struct, :parser
       def_delegators :@parser, :attribute_tags
       def_delegators :@context, :app, :request, :response, :session, :router_params, :not_found
       def_delegators :app, :repository, :config, :logger

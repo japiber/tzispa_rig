@@ -2,7 +2,7 @@
 
 require 'forwardable'
 require 'tzispa/utils/string'
-require_relative 'syntax'
+require 'tzispa/rig/syntax'
 
 
 module Tzispa
