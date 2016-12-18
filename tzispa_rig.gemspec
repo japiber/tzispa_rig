@@ -17,6 +17,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'tzispa_utils',   '~> 0.2.1'
   s.add_dependency 'lru_redux',      '~> 1.1'
 
-  s.files         = Dir.glob("{lib}/**/*") + %w(README.md CHANGELOG.md)
+  s.add_development_dependency "minitest", "~> 5.0"
+
+  s.files         = Dir["{lib}/**/*", "{test}/**/*"] + %w(README.md CHANGELOG.md Rakefile)
   s.require_paths = ['lib']
 end
