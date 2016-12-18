@@ -14,16 +14,12 @@ module Tzispa
         setData(params) if params
       end
 
-      def set(key,value)
-        @data[key.to_sym] = value
-      end
-
-      def get(key)
-        @data[key.to_sym]
-      end
-
       def [](key)
         @data[key.to_sym]
+      end
+
+      def []=(key, value)
+        @data[key.to_sym] = value
       end
 
       def has?(key)
@@ -35,7 +31,7 @@ module Tzispa
       end
 
       def to_h
-        @data
+        @data.dup
       end
 
       alias_method :data, :to_h
