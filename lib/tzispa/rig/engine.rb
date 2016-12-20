@@ -58,8 +58,14 @@ module Tzispa
       end
 
       def set_template(key, name, domain, type)
-        #@@singleton__mutex__.synchronize {
-        @cache[key] = Template.new(name: name, type: type, domain: domain).load!.parse!        
+        # can have recursion from Template
+        unless @@singleton__mutex__.locked?
+          @@singleton__mutex__.synchronize {
+            @cache[key] = Template.new(name: name, type: type, domain: domain).load!.parse!
+          }
+        else
+          @cache[key] = Template.new(name: name, type: type, domain: domain).load!.parse!
+        end
       end
 
     end
