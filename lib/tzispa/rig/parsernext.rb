@@ -3,6 +3,7 @@
 require 'forwardable'
 require 'tzispa/utils/string'
 require 'tzispa/rig/syntax'
+require 'tzispa/rig/engine'
 
 
 module Tzispa
@@ -15,7 +16,7 @@ module Tzispa
       RE_ANCHOR = /(@@\h+@@)/
 
       attr_reader :type, :parser
-      def_delegators :@parser, :template
+      def_delegators :@parser, :domain
 
       def initialize(parser, type)
         @parser = parser
@@ -135,7 +136,6 @@ module Tzispa
         }
       end
 
-
     end
 
 
@@ -184,7 +184,7 @@ module Tzispa
       end
 
       def parse!
-        @loop_parser = ParserNext.new( template, @body ).parse!
+        @loop_parser = ParserNext.new( @body, domain: domain, bindable: true ).parse!
         self
       end
 
@@ -212,8 +212,8 @@ module Tzispa
       end
 
       def parse!
-        @then_parser = ParserNext.new( template, @then_body ).parse!
-        @else_parser = ParserNext.new( template, @else_body ).parse! if @else_body
+        @then_parser = ParserNext.new( @then_body, domain: domain, bindable: true ).parse!
+        @else_parser = ParserNext.new( @else_body, domain: domain, bindable: true ).parse! if @else_body
         self
       end
 
@@ -244,8 +244,8 @@ module Tzispa
       end
 
       def parse!
-        @parsed_block = template.engine.block name: @id, parent: template
-        template.childrens << @parsed_block
+        @parsed_block = Engine.block name: @id, domain: domain
+        parser.childrens << @parsed_block
         self
       end
 
@@ -262,6 +262,7 @@ module Tzispa
 
     end
 
+
     class ParsedIBlock < ParsedEntity
 
       attr_reader :id
@@ -276,10 +277,9 @@ module Tzispa
       end
 
       def parse!
-        @block_then = template.engine.block name: @id_then, parent: template
-        @block_else = template.engine.block name: @id_else, parent: template
-        template.childrens << @block_then
-        template.childrens << @block_else
+        @block_then = Engine.block name: @id_then, domain: domain
+        @block_else = Engine.block name: @id_else, domain: domain
+        parser.childrens << @block_then << @block_else
         self
       end
 
@@ -316,8 +316,8 @@ module Tzispa
       end
 
       def parse!
-        @parsed_static = template.engine.static name: @id, parent: template
-        template.childrens << @parsed_static
+        @parsed_static = Engine.static name: @id, domain: domain
+        parser.childrens << @parsed_static
         self
       end
 
@@ -341,11 +341,13 @@ module Tzispa
 
       include Tzispa::Rig::Syntax
 
-      attr_reader :flags, :template, :the_parsed
+      attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable
 
-      def initialize(template, text=nil)
-        @template = template
-        @inner_text = text ? text : template.content
+      def initialize(text, domain:, bindable: false )
+        @inner_text = text
+        @domain = domain
+        @bindable = bindable
+        @childrens = Array.new
         @the_parsed = Array.new
       end
 
@@ -356,7 +358,7 @@ module Tzispa
       def parse!
         @tags = nil
         parse_flags
-        if @template.bindable?
+        if bindable
           parse_statements
           parse_expressions
         end
