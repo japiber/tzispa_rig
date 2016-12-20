@@ -14,11 +14,12 @@ module Tzispa
 
     class File
 
-      attr_reader :file, :content, :modified
+      attr_reader :filename, :content, :modified, :encoding
 
-      def initialize(file)
-        @file = file
+      def initialize(file, encoding: 'UTF-8')
+        @filename = file
         @loaded = false
+        @encoding = encoding
       end
 
       def loaded?
@@ -26,16 +27,16 @@ module Tzispa
       end
 
       def modified?
-        @modified && (@modified != ::File.mtime(@file))
+        @modified && (@modified != ::File.mtime(filename))
       end
 
       def exist?
-        ::File.exist?(@file)
+        ::File.exist?(filename)
       end
 
       def load!
-        raise NotFound.new("Template file '#{@file}' not found") unless exist?
-        ::File.open(@file, 'r:UTF-8') { |f|
+        raise NotFound.new("Template file '#{filename}' not found") unless exist?
+        ::File.open(filename, "r:#{encoding}") { |f|
           @content = String.new
           @modified = f.mtime
           while line = f.gets
@@ -50,7 +51,7 @@ module Tzispa
       end
 
       def create(content=nil)
-        ::File.open(@file, "w") { |f|
+        ::File.open(filename, "w:#{encoding}") { |f|
           f.puts content
         }
       end
@@ -64,39 +65,30 @@ module Tzispa
       using Tzispa::Utils
 
       BASIC_TYPES    = [:layout, :block, :static].freeze
-      DEFAULT_FORMAT = 'htm'.freeze
-      RIG_EXTENSION  = 'rig'.freeze
+      RIG_EXTENSION  = 'rig.htm'
 
-      attr_reader :name, :type, :domain, :format, :parser, :engine, :subdomain, :childrens
+      attr_reader :name, :type, :domain, :parser, :subdomain, :childrens
       def_delegators :@parser, :attribute_tags
 
-      def initialize(name:, type:, domain: nil, parent: nil, format: nil, params: nil, engine: nil)
-        subdom_name = name.downcase.split('.')
-        @subdomain = subdom_name.first if subdom_name.length > 1
-        @name = subdom_name.last
+      def initialize(name:, type:, domain:, params: nil)
+        name.downcase.split('.').tap { |sdn|
+          @subdomain = sdn.length > 1 ? sdn.first : nil
+          @name = sdn.last
+        }
+        @domain = domain
         @params = Parameters.new(params)
-        @childrens = Array.new
         send('type=', type)
-        if parent
-          @engine = engine || parent.engine
-          @domain = domain || parent.domain
-          @format = format || parent.format
-        else
-          @engine = engine
-          @domain = domain
-          @format = format || DEFAULT_FORMAT
-        end
-        super "#{path}/#{@name}.#{RIG_EXTENSION}.#{@format}"
+        super "#{path}/#{@name}.#{RIG_EXTENSION}"
       end
 
       def parse!
-        @parser = ParserNext.new self
+        @parser = ParserNext.new content, domain: domain, bindable: bindable?
         @parser.parse!
         self
       end
 
       def modified?
-        super || (childrens.count > 0 && childrens.index { |tpl|
+        super || (parser && parser.childrens.index { |tpl|
           tpl.modified?
         })
       end
@@ -113,7 +105,10 @@ module Tzispa
       end
 
       def path
-        "#{@domain.path}/rig/#{@type.to_s.downcase}#{'/'+@subdomain if @subdomain}"
+        String.new.tap { |pth|
+          pth << "#{domain.path}/rig/#{type.to_s.downcase}"
+          pth << "/#{subdomain}" if subdomain
+        }
       end
 
       def create(content='')
