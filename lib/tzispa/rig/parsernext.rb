@@ -16,7 +16,7 @@ module Tzispa
       RE_ANCHOR = /(@@\h+@@)/
 
       attr_reader :type, :parser
-      def_delegators :@parser, :domain
+      def_delegators :@parser, :domain, :content_type
 
       def initialize(parser, type)
         @parser = parser
@@ -184,7 +184,7 @@ module Tzispa
       end
 
       def parse!
-        @loop_parser = ParserNext.new( @body, domain: domain, bindable: true ).parse!
+        @loop_parser = ParserNext.new( @body, parent: parser ).parse!
         self
       end
 
@@ -212,8 +212,8 @@ module Tzispa
       end
 
       def parse!
-        @then_parser = ParserNext.new( @then_body, domain: domain, bindable: true ).parse!
-        @else_parser = ParserNext.new( @else_body, domain: domain, bindable: true ).parse! if @else_body
+        @then_parser = ParserNext.new( @then_body, parent: parser ).parse!
+        @else_parser = ParserNext.new( @else_body, parent: parser ).parse! if @else_body
         self
       end
 
@@ -244,7 +244,7 @@ module Tzispa
       end
 
       def parse!
-        @parsed_block = Engine.block name: @id, domain: domain
+        @parsed_block = Engine.block name: @id, domain: domain, content_type: content_type
         parser.childrens << @parsed_block
         self
       end
@@ -277,8 +277,8 @@ module Tzispa
       end
 
       def parse!
-        @block_then = Engine.block name: @id_then, domain: domain
-        @block_else = Engine.block name: @id_else, domain: domain
+        @block_then = Engine.block name: @id_then, domain: domain, content_type: content_type
+        @block_else = Engine.block name: @id_else, domain: domain, content_type: content_type
         parser.childrens << @block_then << @block_else
         self
       end
@@ -316,7 +316,7 @@ module Tzispa
       end
 
       def parse!
-        @parsed_static = Engine.static name: @id, domain: domain
+        @parsed_static = Engine.static name: @id, domain: domain, content_type: content_type
         parser.childrens << @parsed_static
         self
       end
@@ -341,12 +341,13 @@ module Tzispa
 
       include Tzispa::Rig::Syntax
 
-      attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable
+      attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable, :content_type
 
-      def initialize(text, domain:, bindable: false )
+      def initialize(text, domain: nil, content_type: nil, bindable: nil, parent: nil)
         @inner_text = text
-        @domain = domain
-        @bindable = bindable
+        @domain = domain || parent.domain
+        @bindable = bindable.nil? ? parent.bindable : bindable
+        @content_type = content_type || parent.content_type
         @childrens = Array.new
         @the_parsed = Array.new
       end

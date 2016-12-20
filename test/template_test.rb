@@ -25,9 +25,9 @@ class TemplateTest < Minitest::Test
     }
   }
   let(:domain) { domain_fake.new :test_domain  }
-  let(:index_layout) { Tzispa::Rig::Template.new name: 'index', type: :layout, domain: domain }
-  let(:index_block) { Tzispa::Rig::Template.new name: 'index', type: :block, domain: domain }
-  let(:index_static) { Tzispa::Rig::Template.new name: 'index', type: :static, domain: domain }
+  let(:index_layout) { Tzispa::Rig::Template.new name: 'index', type: :layout, domain: domain, content_type: 'txt' }
+  let(:index_block) { Tzispa::Rig::Template.new name: 'index', type: :block, domain: domain, content_type: 'txt' }
+  let(:index_static) { Tzispa::Rig::Template.new name: 'index', type: :static, domain: domain, content_type: 'txt' }
 
   def setup
     mkfile = ::File.new file.filename, "wt"

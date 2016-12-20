@@ -18,20 +18,20 @@ module Tzispa
 
       class << self
 
-        def layout(name:, domain:, params:nil)
-          rig_template name, domain, :layout, params
+        def layout(name:, domain:, content_type:, params:nil)
+          rig_template name, domain, :layout, content_type, params
         end
 
-        def block(name:, domain:, params:nil)
-          rig_template name, domain, :block, params
+        def block(name:, domain:, content_type:, params:nil)
+          rig_template name, domain, :block, content_type, params
         end
 
-        def static(name:, domain:, params:nil)
-          rig_template name, domain, :static, params
+        def static(name:, domain:, content_type:, params:nil)
+          rig_template name, domain, :static, content_type, params
         end
 
-        def rig_template(name, domain, type, params)
-          instance.send(:cache_template, name, domain, type, params)
+        def rig_template(name, domain, block_type, content_type, params)
+          instance.send(:cache_template, name, domain, block_type, content_type, params)
         end
 
         def cache_sizee=(sz)
@@ -42,29 +42,29 @@ module Tzispa
 
       private
 
-      def cache_template(name, domain, type, params)
-        key = "#{domain}__#{type}__#{name}".to_sym
-        (get_template(key, name, domain, type) || set_template(key, name, domain, type)).dup.tap { |ctpl|
+      def cache_template(name, domain, block_type, content_type, params)
+        key = "#{domain}__#{block_type}__#{name}__#{content_type}".to_sym
+        (get_template(key, name, domain, block_type, content_type) || set_template(key, name, domain, block_type, content_type)).dup.tap { |ctpl|
            ctpl.params = params if params
          }
       end
 
-      def get_template(key, name, domain, type)
+      def get_template(key, name, domain, block_type, content_type)
         if @cache.key?(key) && (@cache[key].modified? || !@cache[key].valid?)
-          set_template(key, name, domain, type)
+          set_template(key, name, domain, block_type, content_type)
         else
           @cache[key]
         end
       end
 
-      def set_template(key, name, domain, type)
+      def set_template(key, name, domain, block_type, content_type)
         # can have recursion from Template
         unless @@singleton__mutex__.locked?
           @@singleton__mutex__.synchronize {
-            @cache[key] = Template.new(name: name, type: type, domain: domain).load!.parse!
+            @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
           }
         else
-          @cache[key] = Template.new(name: name, type: type, domain: domain).load!.parse!
+          @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
         end
       end
 
