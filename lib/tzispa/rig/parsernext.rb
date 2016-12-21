@@ -30,9 +30,9 @@ module Tzispa
         when :var
           ParsedVar.new parser, type, match[1], match[2]
         when :url
-          ParsedUrl.new parser, match[1].to_sym, match[3], match[5], match[2]&.slice(1..-1)&.to_sym
+          ParsedUrl.new parser, match[1].to_sym, match[3], match[5], match[2]&.slice(1..-1)
         when :api
-          ParsedApi.new parser, match[1].to_sym, match[3], match[4], match[5], match[6], match[2]&.slice(1..-1)&.to_sym
+          ParsedApi.new parser, match[1].to_sym, match[3], match[4], match[5], match[6], match[2]&.slice(1..-1)
         when :loop
           ParsedLoop.new parser, type, match[3], match[4]
         when :ife
@@ -110,7 +110,7 @@ module Tzispa
         super(parser, type)
         @layout = layout
         @params = params
-        @app_name = app_name
+        @app_name = app_name&.to_sym
       end
 
       def render(binder)
