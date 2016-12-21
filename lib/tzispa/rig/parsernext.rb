@@ -174,8 +174,8 @@ module Tzispa
     class ParsedLoop < ParsedEntity
       extend Forwardable
 
-      attr_reader :id
-      def_delegators :@loop_parser, :attribute_tags, :loop_parser
+      attr_reader :id, :body_parsed
+      def_delegators :@body_parsed, :attribute_tags, :loop_parser
 
       def initialize(parser, type, id, body)
         super(parser, type)
@@ -184,7 +184,7 @@ module Tzispa
       end
 
       def parse!
-        @loop_parser = ParserNext.new( @body, parent: parser ).parse!
+        @body_parsed = ParserNext.new( @body, parent: parser ).parse!
         self
       end
 
@@ -192,7 +192,7 @@ module Tzispa
         String.new.tap { |text|
           looper = binder.data.send(@id) if binder.data.respond_to?(@id)
           looper.data.each { |loop_item|
-            text << @loop_parser.render(loop_item) if loop_item
+            text << @body_parsed.render(loop_item) if loop_item
           } if looper
         }
       end
