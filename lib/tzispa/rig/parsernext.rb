@@ -202,7 +202,7 @@ module Tzispa
 
     class ParsedIfe < ParsedEntity
 
-      attr_reader :test
+      attr_reader :test, :then_parser, :else_parser
 
       def initialize(parser, type, test, then_body, else_body)
         super(parser, type)
@@ -222,7 +222,7 @@ module Tzispa
       end
 
       def loop_parser(id)
-        @then_parser.loop_parser(id).concat((@else_parser && @else_parser.loop_parser(id)) || Array.new).compact.freeze
+        @then_parser.loop_parser(id).concat(@else_parser&.loop_parser(id) || Array.new).compact.freeze
       end
 
       def render(binder)
