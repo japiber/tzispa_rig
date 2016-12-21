@@ -7,6 +7,7 @@ class ParsernextTest < Minitest::Test
   TPL_VAR  = 'var testing <var:uno/>\n\n {%meta1%} <var:dos/>  <var:uno/>:{%meta2%}\n'
   TPL_LOOP = '<loop:literator> loop testing <var:uno/> <var:dos/>\n </loop:literator> <var:dos/>'
   TPL_IFE  = '<ife:condition> ife testing <var:uno/> <var:dos/>\n </ife:condition> <ife:condition> <var:uno/> {%dos%} <else:condition/> <var:dos/> </ife:condition> '
+  TPL_URL  = '<url:article[id=111,title=this_is_an_url_title]/> <purl:article_list[id={%idp%},title=this_is_an_url_title]/> <purl@adminapp:article_edit[id=122,format=json]/>'
 
   def test_meta_parser
     parser = Tzispa::Rig::ParserNext.new(TPL_META, domain: :test_domain, content_type: :htm, bindable: true).parse!
@@ -55,6 +56,22 @@ class ParsernextTest < Minitest::Test
     assert_equal parser.the_parsed[1].else_parser.the_parsed.count, 1
   end
 
+  def test_url_parser
+    parser = Tzispa::Rig::ParserNext.new(TPL_URL, domain: :test_domain, content_type: :htm, bindable: true).parse!
+    assert_equal parser.the_parsed.count, 4
+    assert_instance_of Tzispa::Rig::ParsedUrl, parser.the_parsed[1]
+    assert_instance_of Tzispa::Rig::ParsedUrl, parser.the_parsed[2]
+    assert_equal parser.the_parsed[0].id, :idp
+    assert_equal parser.the_parsed[1].layout, 'article'
+    assert_equal parser.the_parsed[2].layout, 'article_list'
+    assert_equal parser.the_parsed[3].layout, 'article_edit'
+    assert_equal parser.the_parsed[1].params, 'id=111,title=this_is_an_url_title'
+    assert_equal parser.the_parsed[2].params, "id=#{parser.the_parsed[0].anchor},title=this_is_an_url_title"
+    assert_equal parser.the_parsed[3].params, 'id=122,format=json'
+    assert_nil parser.the_parsed[1].app_name
+    assert_nil parser.the_parsed[2].app_name
+    assert_equal parser.the_parsed[3].app_name, :adminapp
+  end
 
 
 end
