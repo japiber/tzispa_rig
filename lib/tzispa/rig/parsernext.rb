@@ -235,7 +235,7 @@ module Tzispa
 
     class ParsedBlock < ParsedEntity
 
-      attr_reader :params
+      attr_reader :id, :params
 
       def initialize(parser, type, id, params)
         super(parser, type)
