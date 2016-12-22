@@ -9,6 +9,7 @@ class ParsernextTest < Minitest::Test
   TPL_LOOP = '<loop:literator> loop testing <var:uno/> <var:dos/>\n </loop:literator> <var:dos/>'
   TPL_IFE  = '<ife:condition> ife testing <var:uno/> <var:dos/>\n </ife:condition> <ife:condition> <var:uno/> {%dos%} <else:condition/> <var:dos/> </ife:condition> '
   TPL_URL  = '<url:article[id=111,title=this_is_an_url_title]/> <purl:article_list[id={%idp%},title=this_is_an_url_title]/> <purl@adminapp:article_edit[id=122,format=json]/>'
+  TPL_API  = '<api:article:add/> <api@adminapp:article:edit:{%idarticle%}/> <sapi:order:detail_sum:2016_10,2016_12/>'
   TPL_BLK  = '<blk:detail/> <blk:product.detail[tab={%selected_tab%}]/> <iblk:test:block_one[select=50]:product.block_two/> <iblk:test:product.block_one:block_two[select=10]/>'
   TPL_STA  = '<static:whatsnew/> <static:product.whatsnew[section=retail]/> <static:product.whatsnew[section={%selected%}]/>'
 
@@ -107,6 +108,27 @@ class ParsernextTest < Minitest::Test
     assert_nil parser.the_parsed[1].app_name
     assert_nil parser.the_parsed[2].app_name
     assert_equal parser.the_parsed[3].app_name, :adminapp
+  end
+
+  def test_api_parser
+    parser = Tzispa::Rig::ParserNext.new(TPL_API, domain: domain, content_type: :htm, bindable: true).parse!
+    assert_equal parser.the_parsed.count, 4
+    assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[1]
+    assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[2]
+    assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[2]
+    #<api:article:add/> <api@adminapp:article:edit:{%idarticle%}/> <sapi:order:detail_sum:2016_10,2016_12/>
+    assert_equal parser.the_parsed[1].handler, 'article'
+    assert_equal parser.the_parsed[1].verb, 'add'
+    assert_nil parser.the_parsed[1].predicate
+    assert_nil parser.the_parsed[1].app_name
+    assert_equal parser.the_parsed[2].handler, 'article'
+    assert_equal parser.the_parsed[2].verb, 'edit'
+    assert_equal parser.the_parsed[2].predicate, "#{parser.the_parsed[0].anchor}"
+    assert_equal parser.the_parsed[2].app_name, :adminapp
+    assert_equal parser.the_parsed[3].handler, 'order'
+    assert_equal parser.the_parsed[3].verb, 'detail_sum'
+    assert_equal parser.the_parsed[3].predicate, '2016_10,2016_12'
+    assert_nil parser.the_parsed[3].app_name
   end
 
   def test_blk_parser

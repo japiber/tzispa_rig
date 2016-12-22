@@ -149,7 +149,7 @@ module Tzispa
         @verb = verb
         @predicate = predicate
         @sufix = sufix
-        @app_name = app_name
+        @app_name = app_name&.to_sym
       end
 
       def render(binder)
