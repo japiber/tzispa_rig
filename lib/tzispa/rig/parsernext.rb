@@ -265,7 +265,7 @@ module Tzispa
 
     class ParsedIBlock < ParsedEntity
 
-      attr_reader :id
+      attr_reader :id, :id_then, :params_then, :id_else, :params_else
 
       def initialize(parser, type, test, id_then, params_then, id_else, params_else)
         super(parser, type)
