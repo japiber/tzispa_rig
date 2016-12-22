@@ -309,6 +309,8 @@ module Tzispa
 
     class ParsedStatic < ParsedEntity
 
+      attr_reader :id, :params
+
       def initialize(parser, type, id, params)
         super(parser, type)
         @id = id
