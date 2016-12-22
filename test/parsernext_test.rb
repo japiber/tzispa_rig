@@ -115,8 +115,7 @@ class ParsernextTest < Minitest::Test
     assert_equal parser.the_parsed.count, 4
     assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[1]
     assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[2]
-    assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[2]
-    #<api:article:add/> <api@adminapp:article:edit:{%idarticle%}/> <sapi:order:detail_sum:2016_10,2016_12/>
+    assert_instance_of Tzispa::Rig::ParsedApi, parser.the_parsed[3]    
     assert_equal parser.the_parsed[1].handler, 'article'
     assert_equal parser.the_parsed[1].verb, 'add'
     assert_nil parser.the_parsed[1].predicate
