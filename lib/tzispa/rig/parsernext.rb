@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'forwardable'
 require 'tzispa/utils/string'
 require 'tzispa/rig/syntax'
@@ -12,7 +10,7 @@ module Tzispa
     class ParsedEntity
       extend Forwardable
 
-      STRING_EMPTY = ''.freeze
+      STRING_EMPTY = ''
       RE_ANCHOR = /(@@\h+@@)/
 
       attr_reader :type, :parser
@@ -73,7 +71,7 @@ module Tzispa
       private
 
       def unknown
-        @unknown ||= "#{@id}:unknown!!".freeze
+        @unknown ||= "#{@id}:unknown!!"
       end
 
     end
@@ -346,12 +344,10 @@ module Tzispa
       attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable, :content_type
 
       def initialize(text, domain: nil, content_type: nil, bindable: nil, parent: nil)
-        @inner_text = text
+        @inner_text = text.dup
         @domain = domain || parent.domain
         @bindable = bindable.nil? ? parent.bindable : bindable
         @content_type = content_type || parent.content_type
-        @childrens = Array.new
-        @the_parsed = Array.new
       end
 
       def empty?
@@ -359,7 +355,9 @@ module Tzispa
       end
 
       def parse!
-        @tags = nil
+        @attribute_tags  = nil
+        @childrens = Array.new
+        @the_parsed = Array.new
         parse_flags
         if bindable
           parse_statements
@@ -370,7 +368,7 @@ module Tzispa
         self
       end
 
-      def render(binder, context=nil)
+      def render(binder)
         @inner_text.dup.tap { |text|
           @the_parsed.each { |value|
             text.gsub! value.anchor, value.render(binder)
@@ -379,11 +377,13 @@ module Tzispa
       end
 
       def attribute_tags
-        @attribute_tags ||= @the_parsed.map { |p|
+        @attribute_tags ||= the_parsed.map { |p|
            p.id.to_sym if p.respond_to? :id
-         }.concat(@the_parsed.map{ |p|
-            p.attribute_tags if p.type==:ife
-        }).compact.flatten.uniq.freeze
+         }.concat(
+            the_parsed.map{ |p|
+              p.attribute_tags if p.respond_to? :attribute_tags
+            }
+          ).compact.flatten.uniq.freeze
       end
 
       def loop_parser(id)
@@ -412,8 +412,8 @@ module Tzispa
       end
 
       def parse_expressions
-        RIG_EXPRESSIONS.each_key { |kre|
-          @inner_text.gsub!(RIG_EXPRESSIONS[kre]) { |match|
+        RIG_EXPRESSIONS.each { |kre, re|
+          @inner_text.gsub!(re) { |match|
             pe = ParsedEntity.instance(self, kre, Regexp.last_match )
             @the_parsed << pe
             pe.anchor
