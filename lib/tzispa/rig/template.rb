@@ -84,7 +84,7 @@ module Tzispa
 
       def parse!
         @parser = ParserNext.new content, domain: domain, content_type: content_type, bindable: bindable?
-        @parser.parse!
+        parser.parse!
         self
       end
 
@@ -98,11 +98,11 @@ module Tzispa
         !content.empty? && !parser.empty?
       end
 
-      def render(context)
-        parse! unless @parser
-        binder = TemplateBinder.for self, context
-        binder.bind! if binder && binder.respond_to?(:bind!)
-        @parser.render binder, context
+      def render(context, binder=nil)
+        parse! unless parser
+        binder ||= TemplateBinder.for self, context
+        binder.bind! if binder&.respond_to?(:bind!)
+        parser.render binder
       end
 
       def path
