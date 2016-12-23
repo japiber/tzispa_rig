@@ -190,7 +190,7 @@ module Tzispa
         String.new.tap { |text|
           looper = binder.data.send(@id) if binder.data.respond_to?(@id)
           looper.data.each { |loop_item|
-            text << @body_parser.render(loop_item) if loop_item
+            text << body_parser.render(loop_item) if loop_item
           } if looper
         }
       end
@@ -381,14 +381,19 @@ module Tzispa
            p.id.to_sym if p.respond_to? :id
          }.concat(
             the_parsed.map{ |p|
-              p.attribute_tags if p.respond_to? :attribute_tags
+              p.attribute_tags if p.type == :ife
             }
           ).compact.flatten.uniq.freeze
       end
 
       def loop_parser(id)
-        @the_parsed.select{ |p| p.type==:loop && p.id==id}.concat(
-          @the_parsed.select{ |p| p.type==:ife }.map { |p| p.loop_parser(id) }.flatten.compact
+        the_parsed.select{ |p|
+          p.type==:loop && p.id==id
+        }.concat(
+          the_parsed.select{ |p|
+            p.type==:ife }.map {
+               |p| p.loop_parser(id)
+             }.flatten.compact
         )
       end
 
