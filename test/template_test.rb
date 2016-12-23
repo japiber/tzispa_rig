@@ -2,32 +2,7 @@ require 'fileutils'
 require 'test_helper'
 
 class TemplateTest < Minitest::Test
-  extend Minitest::Spec::DSL
-
-  FILENAME = "test/res/testfile"
-  STR_T    = "This is a plain text file\n"
-  STR_L    = "This is a layout template file\n"
-  STR_B    = "This is a block template file\n"
-  STR_S    = "This is a static template file\n"
-
-  let(:file) { Tzispa::Rig::File.new(FILENAME) }
-  let(:nofile) { Tzispa::Rig::File.new "test/res/notexistingfile" }
-
-  let(:domain_fake) {
-    Struct.new(:name) {
-      def path
-        "test/res/apps/#{name}"
-      end
-
-      def require(file)
-        Kernel.require "./#{path}/#{file}"
-      end
-    }
-  }
-  let(:domain) { domain_fake.new :test_domain  }
-  let(:index_layout) { Tzispa::Rig::Template.new name: 'index', type: :layout, domain: domain, content_type: 'txt' }
-  let(:index_block) { Tzispa::Rig::Template.new name: 'index', type: :block, domain: domain, content_type: 'txt' }
-  let(:index_static) { Tzispa::Rig::Template.new name: 'index', type: :static, domain: domain, content_type: 'txt' }
+  include TemplateTestHelper
 
   def setup
     mkfile = ::File.new file.filename, "wt"
