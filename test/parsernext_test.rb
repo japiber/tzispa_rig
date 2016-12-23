@@ -35,7 +35,7 @@ class ParsernextTest < Minitest::Test
 
   def test_meta_render
     parser = Tzispa::Rig::ParserNext.new TPL_META, domain: domain, content_type: :txt, bindable: true
-    parser.parse!    
+    parser.parse!
     assert_equal parser.attribute_tags.count, 2
     assert_equal parser.attribute_tags, [:meta1, :meta2]
     binder = binder_fake.new parser, {}, [123, 'john doe']
@@ -58,16 +58,51 @@ class ParsernextTest < Minitest::Test
     assert_equal parser.the_parsed[4].id, :uno
   end
 
+  def test_var_render
+    parser = Tzispa::Rig::ParserNext.new(TPL_VAR, domain: domain, content_type: :htm, bindable: true).parse!
+    assert_equal parser.the_parsed.count, 5
+    assert_equal parser.attribute_tags.count, 4
+    assert_equal parser.attribute_tags, [:meta1, :meta2, :uno, :dos]
+    binder = binder_fake.new parser, {}, [2016, 'john doe', 'happy', 'year']
+    assert_equal parser.render(binder), 'var testing happy\n\n 2016 year  happy:john doe\n'
+    binder = binder_fake.new parser, {}, [2015, 'john doe', 'happy']
+    assert_equal parser.render(binder), 'var testing happy\n\n 2015   happy:john doe\n'
+    binder = binder_fake.new parser, {}, []
+    assert_equal parser.render(binder), 'var testing \n\n    :\n'
+  end
+
   def test_loop_parser
     parser = Tzispa::Rig::ParserNext.new(TPL_LOOP, domain: domain, content_type: :htm, bindable: true).parse!
     assert_equal parser.the_parsed.count, 2
     assert_instance_of Tzispa::Rig::ParsedLoop, parser.the_parsed[0]
     assert_equal parser.the_parsed[0].id, :literator
-    assert_equal parser.the_parsed[0].body_parser.the_parsed.count, 2
+    assert_equal parser.the_parsed[0].body_parser.the_parsed.count, 3
     assert_instance_of Tzispa::Rig::ParsedVar, parser.the_parsed[0].body_parser.the_parsed[0]
     assert_instance_of Tzispa::Rig::ParsedVar, parser.the_parsed[0].body_parser.the_parsed[1]
     assert_equal parser.the_parsed[0].body_parser.the_parsed[0].id, :uno
     assert_equal parser.the_parsed[0].body_parser.the_parsed[1].id, :dos
+  end
+
+  def test_loop_render
+    parser = Tzispa::Rig::ParserNext.new(TPL_LOOP, domain: domain, content_type: :htm, bindable: true).parse!
+    assert_equal parser.the_parsed.count, 2
+    assert_equal parser.attribute_tags.count, 2
+    assert_equal parser.attribute_tags, [:literator, :tres]
+    assert_equal parser.the_parsed[0].body_parser.the_parsed.count, 3
+    assert_equal parser.the_parsed[0].body_parser.attribute_tags.count, 2
+    assert_equal parser.the_parsed[0].body_parser.attribute_tags, [:uno, :dos]
+    binder = binder_fake.new parser, {}, [Struct.new(:data).new([
+      binder_fake.new(parser.the_parsed[0].body_parser, {}, [1, 2]),
+      binder_fake.new(parser.the_parsed[0].body_parser, {}, [3, 4]),
+      binder_fake.new(parser.the_parsed[0].body_parser, {}, [5, 6])
+      ]), 'watching']
+    assert_equal parser.render(binder), ' loop testing 1 2\n 1  loop testing 3 4\n 3  loop testing 5 6\n 5  watching'
+    binder = binder_fake.new parser, {}, [Struct.new(:data).new([]), 'watching']
+    assert_equal parser.render(binder), ' watching'
+    binder = binder_fake.new parser, {}, [Struct.new(:data).new, 'watching']
+    assert_raises(NoMethodError) { parser.render(binder) }
+    binder = binder_fake.new parser, {}, [[], 'watching']
+    assert_raises(NoMethodError) { parser.render(binder) }    
   end
 
   def test_ife_parser

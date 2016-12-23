@@ -8,7 +8,7 @@ module TemplateTestHelper
 
   TPL_META = 'meta testing {%meta1%}\n\n {%meta1%}:{%meta2%}\n'
   TPL_VAR  = 'var testing <var:uno/>\n\n {%meta1%} <var:dos/>  <var:uno/>:{%meta2%}\n'
-  TPL_LOOP = '<loop:literator> loop testing <var:uno/> <var:dos/>\n </loop:literator> <var:dos/>'
+  TPL_LOOP = '<loop:literator> loop testing <var:uno/> <var:dos/>\n <var:uno/> </loop:literator> <var:tres/>'
   TPL_IFE  = '<ife:condition> ife testing <var:uno/> <var:dos/>\n </ife:condition> <ife:condition> <var:uno/> {%dos%} <else:condition/> <var:dos/> </ife:condition> '
   TPL_URL  = '<url:article[id=111,title=this_is_an_url_title]/> <purl:article_list[id={%idp%},title=this_is_an_url_title]/> <purl@adminapp:article_edit[id=122,format=json]/>'
   TPL_API  = '<api:article:add/> <api@adminapp:article:edit:{%idarticle%}/> <sapi:order:detail_sum:2016_10,2016_12/>'
