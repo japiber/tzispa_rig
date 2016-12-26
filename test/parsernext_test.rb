@@ -110,6 +110,8 @@ class ParsernextTest < Minitest::Test
     assert_equal parser.the_parsed[0].attribute_tags, [:condition, :uno, :dos]
     assert_equal parser.the_parsed[1].attribute_tags.count, 4
     assert_equal parser.the_parsed[1].attribute_tags, [:condition, :dos, :tres, :uno]
+    assert_equal parser.attribute_tags.count, 4
+    assert_equal parser.attribute_tags, [:condition, :uno, :dos, :tres]
     assert_instance_of Tzispa::Rig::ParsedIfe, parser.the_parsed[0]
     assert_equal parser.the_parsed[0].test, :condition
     assert_equal parser.the_parsed[1].test, :condition
@@ -120,8 +122,11 @@ class ParsernextTest < Minitest::Test
   end
 
   def test_ife_render
-    # = Tzispa::Rig::ParserNext.new(TPL_IFE, domain: domain, content_type: :htm, bindable: true).parse!
-
+    parser = Tzispa::Rig::ParserNext.new(TPL_IFE, domain: domain, content_type: :htm, bindable: true).parse!
+    binder = binder_fake.new parser, {}, [1==1, 'john doe', 'happy', 'year']
+    assert_equal parser.render(binder), ' ife testing john doe happy\n   john doe happy year  '
+    binder = binder_fake.new parser, {}, [1==0, 'john doe', 'happy', 'year']
+    assert_equal parser.render(binder), '  happy  '
   end
 
 

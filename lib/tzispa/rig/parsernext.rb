@@ -211,7 +211,7 @@ module Tzispa
 
       def parse!
         @then_parser = ParserNext.new( @then_body, parent: parser ).parse!
-        @else_parser = ParserNext.new( @else_body, parent: parser ).parse! if @else_body
+        @else_parser = @else_body ? ParserNext.new( @else_body, parent: parser ).parse! : nil
         self
       end
 
@@ -225,7 +225,7 @@ module Tzispa
 
       def render(binder)
         test_eval = binder.data && binder.data.respond_to?(@test) && binder.data.send(@test)
-        ifeparser = test_eval ? @then_parser : @else_parser
+        ifeparser = test_eval ? then_parser : else_parser
         ifeparser ? ifeparser.render(binder) : STRING_EMPTY
       end
 
