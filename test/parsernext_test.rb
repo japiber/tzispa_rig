@@ -74,9 +74,13 @@ class ParsernextTest < Minitest::Test
   def test_loop_parser
     parser = Tzispa::Rig::ParserNext.new(TPL_LOOP, domain: domain, content_type: :htm, bindable: true).parse!
     assert_equal parser.the_parsed.count, 2
+    assert_equal parser.attribute_tags.count, 2
+    assert_equal parser.attribute_tags, [:literator, :tres]
     assert_instance_of Tzispa::Rig::ParsedLoop, parser.the_parsed[0]
     assert_equal parser.the_parsed[0].id, :literator
     assert_equal parser.the_parsed[0].body_parser.the_parsed.count, 3
+    assert_equal parser.the_parsed[0].body_parser.attribute_tags.count, 2
+    assert_equal parser.the_parsed[0].body_parser.attribute_tags, [:uno, :dos]
     assert_instance_of Tzispa::Rig::ParsedVar, parser.the_parsed[0].body_parser.the_parsed[0]
     assert_instance_of Tzispa::Rig::ParsedVar, parser.the_parsed[0].body_parser.the_parsed[1]
     assert_equal parser.the_parsed[0].body_parser.the_parsed[0].id, :uno
@@ -85,12 +89,6 @@ class ParsernextTest < Minitest::Test
 
   def test_loop_render
     parser = Tzispa::Rig::ParserNext.new(TPL_LOOP, domain: domain, content_type: :htm, bindable: true).parse!
-    assert_equal parser.the_parsed.count, 2
-    assert_equal parser.attribute_tags.count, 2
-    assert_equal parser.attribute_tags, [:literator, :tres]
-    assert_equal parser.the_parsed[0].body_parser.the_parsed.count, 3
-    assert_equal parser.the_parsed[0].body_parser.attribute_tags.count, 2
-    assert_equal parser.the_parsed[0].body_parser.attribute_tags, [:uno, :dos]
     binder = binder_fake.new parser, {}, [Struct.new(:data).new([
       binder_fake.new(parser.the_parsed[0].body_parser, {}, [1, 2]),
       binder_fake.new(parser.the_parsed[0].body_parser, {}, [3, 4]),
@@ -102,20 +100,30 @@ class ParsernextTest < Minitest::Test
     binder = binder_fake.new parser, {}, [Struct.new(:data).new, 'watching']
     assert_raises(NoMethodError) { parser.render(binder) }
     binder = binder_fake.new parser, {}, [[], 'watching']
-    assert_raises(NoMethodError) { parser.render(binder) }    
+    assert_raises(NoMethodError) { parser.render(binder) }
   end
 
   def test_ife_parser
     parser = Tzispa::Rig::ParserNext.new(TPL_IFE, domain: domain, content_type: :htm, bindable: true).parse!
     assert_equal parser.the_parsed.count, 2
+    assert_equal parser.the_parsed[0].attribute_tags.count, 3
+    assert_equal parser.the_parsed[0].attribute_tags, [:condition, :uno, :dos]
+    assert_equal parser.the_parsed[1].attribute_tags.count, 4
+    assert_equal parser.the_parsed[1].attribute_tags, [:condition, :dos, :tres, :uno]
     assert_instance_of Tzispa::Rig::ParsedIfe, parser.the_parsed[0]
     assert_equal parser.the_parsed[0].test, :condition
     assert_equal parser.the_parsed[1].test, :condition
     assert_equal parser.the_parsed[0].then_parser.the_parsed.count, 2
     assert_nil parser.the_parsed[0].else_parser
-    assert_equal parser.the_parsed[1].then_parser.the_parsed.count, 2
+    assert_equal parser.the_parsed[1].then_parser.the_parsed.count, 3
     assert_equal parser.the_parsed[1].else_parser.the_parsed.count, 1
   end
+
+  def test_ife_render
+    # = Tzispa::Rig::ParserNext.new(TPL_IFE, domain: domain, content_type: :htm, bindable: true).parse!
+
+  end
+
 
   def test_url_parser
     parser = Tzispa::Rig::ParserNext.new(TPL_URL, domain: domain, content_type: :htm, bindable: true).parse!

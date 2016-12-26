@@ -216,7 +216,7 @@ module Tzispa
       end
 
       def attribute_tags
-        @attribute_tags ||= [@test].concat(@then_parser.attribute_tags).concat((@else_parser && @else_parser.attribute_tags) || Array.new).compact.uniq.freeze
+        @attribute_tags ||= [test].concat(then_parser.attribute_tags).concat(else_parser&.attribute_tags || Array.new).compact.uniq.freeze
       end
 
       def loop_parser(id)
