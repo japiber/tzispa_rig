@@ -119,7 +119,7 @@ module Tzispa
         case type
         when :purl
           app_name ?
-            binder.context.app_layout_path(app_name, b_layout, Parameters.new(b_params).tp_h) :
+            binder.context.app_layout_path(app_name, b_layout, Parameters.new(b_params).to_h) :
             binder.context.layout_path(b_layout, Parameters.new(b_params).to_h)
         when :url
           app_name ?
@@ -220,11 +220,11 @@ module Tzispa
       end
 
       def loop_parser(id)
-        @then_parser.loop_parser(id).concat(@else_parser&.loop_parser(id) || Array.new).compact.freeze
+        @then_parser.loop_parser(id).concat(else_parser&.loop_parser(id) || Array.new).compact.freeze
       end
 
       def render(binder)
-        test_eval = binder.data && binder.data.respond_to?(@test) && binder.data.send(@test)
+        test_eval = binder.data && binder.data.respond_to?(test) && binder.data.send(test)
         ifeparser = test_eval ? then_parser : else_parser
         ifeparser ? ifeparser.render(binder) : STRING_EMPTY
       end
