@@ -91,8 +91,8 @@ module Tzispa
       def render(binder)
         if binder.data.respond_to?(@id)
           value = binder.data.send(@id).to_s
-          sanitizer = "sanitize_#{parser.content_type}".to_sym
-          respond_to?(sanitizer) ? send(sanitizer, value) : value
+          escaper = :"escape_#{parser.content_type}"
+          respond_to?(escaper) ? send(escaper, value) : value
         else
           unknown
         end
