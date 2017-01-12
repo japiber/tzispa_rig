@@ -155,7 +155,6 @@ module TemplateTestHelper
         sign << "**#{salt}"
         Digest::SHA1.hexdigest sign
       end
-
     }
   }
 

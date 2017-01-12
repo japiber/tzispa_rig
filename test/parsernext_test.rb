@@ -195,7 +195,6 @@ class ParsernextTest < Minitest::Test
     parser = Tzispa::Rig::ParserNext.new(TPL_API3, domain: domain, content_type: :htm, bindable: true).parse!
     binder = binder_fake.new parser, context, []
     assert_equal parser.render(binder), "http://mytestdomainurl.com/#{sign}__order/detail_sum/2016_10,2016_12"
-
   end
 
 
