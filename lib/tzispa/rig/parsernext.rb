@@ -78,6 +78,7 @@ module Tzispa
 
 
     class ParsedVar < ParsedEntity
+      include Tzispa::Utils::String
 
       attr_reader :id
 
@@ -88,7 +89,13 @@ module Tzispa
       end
 
       def render(binder)
-        binder.data.respond_to?(@id) ? binder.data.send(@id).to_s : unknown
+        if binder.data.respond_to?(@id)
+          value = binder.data.send(@id).to_s
+          sanitizer = "sanitize_#{parser.content_type}".to_sym
+          respond_to?(sanitizer) ? send(sanitizer, value) : value
+        else
+          unknown
+        end
       end
 
       private
@@ -275,8 +282,8 @@ module Tzispa
       end
 
       def parse!
-        @block_then = Engine.block name: @id_then, domain: domain, content_type: content_type
-        @block_else = Engine.block name: @id_else, domain: domain, content_type: content_type
+        @block_then = @id_then != '__empty__' ? Engine.block( name: @id_then, domain: domain, content_type: content_type ): Engine.empty
+        @block_else = @id_else != '__empty__' ? Engine.block( name: @id_else, domain: domain, content_type: content_type) : Engine.empty
         parser.childrens << @block_then << @block_else
         self
       end
