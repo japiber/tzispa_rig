@@ -18,6 +18,10 @@ module Tzispa
 
       class << self
 
+        def empty
+          TemplateBase.new
+        end
+
         def layout(name:, domain:, content_type:, params:nil)
           rig_template name, domain, :layout, content_type, params
         end
