@@ -12,18 +12,50 @@ module Tzispa
 
     class ReadError < IOError; end
 
-    class File
+    class TemplateBase
 
-      attr_reader :filename, :content, :modified, :encoding
+      attr_reader :content
 
-      def initialize(file, encoding: 'UTF-8')
-        @filename = file
-        @loaded = false
-        @encoding = encoding
+      def initialize
+        @content = nil
+        @loaded = true
       end
 
       def loaded?
         @loaded
+      end
+
+      def modified?
+        false
+      end
+
+      def exist?
+        true
+      end
+
+      def load!
+        self
+      end
+
+      def parse!
+        self
+      end
+
+      def render(context, binder=nil)
+        ""
+      end
+
+    end
+
+    class File < TemplateBase
+
+      attr_reader :filename, :encoding
+
+      def initialize(name, encoding: 'UTF-8')
+        super()
+        @filename = name
+        @loaded = false
+        @encoding = encoding
       end
 
       def modified?
@@ -39,12 +71,11 @@ module Tzispa
         ::File.open(filename, "r:#{encoding}") { |f|
           @content = String.new
           @modified = f.mtime
-          while line = f.gets
+          f.each { |line|
             @content << line
-          end
-          f.close
+          }
+          @loaded = true
         }
-        @loaded = true
         self
       rescue Errno::ENOENT
         raise ReadError.new "Template file '#{@file}' could not be read"
