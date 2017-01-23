@@ -119,19 +119,19 @@ module Tzispa
       end
 
       def render(binder)
-        b_params = @params.dup.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        } if @params
         b_layout = bind_value(@layout.dup, binder).to_sym
+        h_params = Parameters.new(@params&.dup&.gsub(RE_ANCHOR) { |match|
+          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
+        }).to_h        
         case type
         when :purl
           app_name ?
-            binder.context.app_layout_path(app_name, b_layout, Parameters.new(b_params).to_h) :
-            binder.context.layout_path(b_layout, Parameters.new(b_params).to_h)
+            binder.context.app_layout_path(app_name, b_layout, h_params) :
+            binder.context.layout_path(b_layout, h_params)
         when :url
           app_name ?
-            binder.context.app_layout_canonical_url(app_name, b_layout, Parameters.new(b_params).to_h) :
-            binder.context.layout_canonical_url(b_layout, Parameters.new(b_params).to_h)
+            binder.context.app_layout_canonical_url(app_name, b_layout, h_params) :
+            binder.context.layout_canonical_url(b_layout, h_params)
         end
       end
 
