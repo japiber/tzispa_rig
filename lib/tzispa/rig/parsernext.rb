@@ -14,7 +14,7 @@ module Tzispa
       RE_ANCHOR = /(@@\h+@@)/
 
       attr_reader :type, :parser
-      def_delegators :@parser, :domain, :content_type
+      def_delegators :@parser, :domain, :content_type, :template
 
       def initialize(parser, type)
         @parser = parser
@@ -122,7 +122,7 @@ module Tzispa
         b_layout = bind_value(@layout.dup, binder).to_sym
         h_params = Parameters.new(@params&.dup&.gsub(RE_ANCHOR) { |match|
           parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }).to_h        
+        }).to_h
         case type
         when :purl
           app_name ?
@@ -189,7 +189,7 @@ module Tzispa
       end
 
       def parse!
-        @body_parser = ParserNext.new( @body, parent: parser ).parse!
+        @body_parser = ParserNext.new(template, @body, parent: parser ).parse!
         self
       end
 
@@ -217,8 +217,8 @@ module Tzispa
       end
 
       def parse!
-        @then_parser = ParserNext.new( @then_body, parent: parser ).parse!
-        @else_parser = @else_body ? ParserNext.new( @else_body, parent: parser ).parse! : nil
+        @then_parser = ParserNext.new(template, @then_body, parent: parser ).parse!
+        @else_parser = @else_body ? ParserNext.new(template,  @else_body, parent: parser ).parse! : nil
         self
       end
 
@@ -249,21 +249,38 @@ module Tzispa
       end
 
       def parse!
-        @parsed_block = Engine.block name: @id, domain: domain, content_type: content_type
+        # to avoid infinite recursion
+        @parsed_block = obtain_block @id
         parser.childrens << @parsed_block
         self
       end
 
       def render(binder)
         blk = @parsed_block.dup
-        if @params
-          b_params = @params.dup.gsub(RE_ANCHOR) { |match|
-            parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-          }
-          blk.params = b_params
-        end
+        blk.params = bind_value(@params.dup, binder) if @params
         blk.render binder.context
       end
+
+      private
+
+      def bind_value(value, binder)
+        value.gsub(RE_ANCHOR) { |match|
+          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
+        }
+      end
+
+      def obtain_block(id)
+        case id
+        when '__empty__'
+          Engine.empty
+        when template.id
+          # to avoid infinite recursion
+          parser.template
+        else
+          Engine.block(name: id, domain: domain, content_type: content_type)
+        end
+      end
+
 
     end
 
@@ -282,8 +299,8 @@ module Tzispa
       end
 
       def parse!
-        @block_then = @id_then != '__empty__' ? Engine.block( name: @id_then, domain: domain, content_type: content_type ): Engine.empty
-        @block_else = @id_else != '__empty__' ? Engine.block( name: @id_else, domain: domain, content_type: content_type) : Engine.empty
+        @block_then = obtain_block @id_then
+        @block_else = obtain_block @id_else
         parser.childrens << @block_then << @block_else
         self
       end
@@ -291,23 +308,33 @@ module Tzispa
       def render(binder)
         if binder.data.respond_to?(@id) && binder.data.send(@id)
           blk = @block_then.dup
-          if @params_then
-            b_params = @params_then.dup.gsub(RE_ANCHOR) { |match|
-              parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-            }
-            blk.params = b_params
-          end
+          blk.params = bind_value(@params_then.dup, binder) if @params_then
         else
           blk = @block_else.dup
-          if @params_else
-            b_params = @params_else.dup.gsub(RE_ANCHOR) { |match|
-              parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-            }
-            blk.params = b_params
-          end
+          blk.params = bind_value(@params_else.dup, binder) if @params_else
         end
         blk.render binder.context
       end
+
+      private
+
+      def obtain_block(id)
+        case id
+        when '__empty__'
+          Engine.empty
+        when template.id
+          parser.template
+        else
+          Engine.block(name: id, domain: domain, content_type: content_type)
+        end
+      end
+
+      def bind_value(value, binder)
+        value.gsub(RE_ANCHOR) { |match|
+          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
+        }
+      end
+
 
     end
 
@@ -350,7 +377,9 @@ module Tzispa
 
       attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable, :content_type
 
-      def initialize(text, domain: nil, content_type: nil, bindable: nil, parent: nil)
+      def initialize(template, text, domain: nil, content_type: nil, bindable: nil, parent: nil)
+        @parsed = false
+        @template = template
         @inner_text = text.dup
         @domain = domain || parent.domain
         @bindable = bindable.nil? ? parent.bindable : bindable
@@ -362,17 +391,24 @@ module Tzispa
       end
 
       def parse!
-        @attribute_tags  = nil
-        @childrens = Array.new
-        @the_parsed = Array.new
-        parse_flags
-        if bindable
-          parse_statements
-          parse_expressions
+        unless parsed?
+          @attribute_tags  = nil
+          @childrens = Array.new
+          @the_parsed = Array.new
+          if bindable
+            parse_flags
+            parse_statements
+            parse_expressions
+            parse_templates
+            parse_url_builder
+          end
+          @parsed = true
         end
-        parse_url_builder
-        parse_templates
         self
+      end
+
+      def parsed?
+        @parsed
       end
 
       def render(binder)

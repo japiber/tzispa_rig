@@ -98,10 +98,11 @@ module Tzispa
       BASIC_TYPES    = [:layout, :block, :static].freeze
       RIG_EXTENSION  = 'rig'
 
-      attr_reader :name, :type, :domain, :parser, :subdomain, :childrens, :content_type
+      attr_reader :id, :name, :type, :domain, :parser, :subdomain, :childrens, :content_type
       def_delegators :@parser, :attribute_tags
 
       def initialize(name:, type:, domain:, content_type:, params: nil)
+        @id = name
         name.downcase.split('.').tap { |sdn|
           @subdomain = sdn.length > 1 ? sdn.first : nil
           @name = sdn.last
@@ -114,7 +115,7 @@ module Tzispa
       end
 
       def parse!
-        @parser = ParserNext.new content, domain: domain, content_type: content_type, bindable: bindable?
+        @parser = ParserNext.new self, content, domain: domain, content_type: content_type, bindable: bindable?
         parser.parse!
         self
       end

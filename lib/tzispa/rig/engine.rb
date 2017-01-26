@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'singleton'
+require 'digest'
 require 'lru_redux'
 require 'tzispa/rig/template'
 
@@ -47,7 +48,7 @@ module Tzispa
       private
 
       def cache_template(name, domain, block_type, content_type, params)
-        key = "#{domain}__#{block_type}__#{name}__#{content_type}".to_sym
+        key = Digest::SHA256.hexdigest("#{domain}/#{block_type}/#{name}/#{content_type}").to_sym
         (get_template(key, name, domain, block_type, content_type) || set_template(key, name, domain, block_type, content_type)).dup.tap { |ctpl|
            ctpl.params = params if params
          }
@@ -57,12 +58,11 @@ module Tzispa
         if @cache.key?(key) && (@cache[key].modified? || !@cache[key].valid?)
           set_template(key, name, domain, block_type, content_type)
         else
-          @cache[key]
+          @cache[key] || set_template(key, name, domain, block_type, content_type)
         end
       end
 
       def set_template(key, name, domain, block_type, content_type)
-        # can have recursion from Template
         unless @@singleton__mutex__.locked?
           @@singleton__mutex__.synchronize {
             @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
