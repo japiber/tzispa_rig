@@ -262,7 +262,7 @@ You can also use template subdomains using dot notation in the name
        </div>
     </div>
   </div>
-  <static:footer/>
+  <blk:widget.footer/>
   <static:footscripts/>
 </body>
 </html>
