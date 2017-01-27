@@ -275,7 +275,9 @@ module Tzispa
           Engine.empty
         when template.id
           # to avoid infinite recursion
-          parser.template
+          template.type == :block ?
+            template :
+            Engine.block(name: id, domain: domain, content_type: content_type)
         else
           Engine.block(name: id, domain: domain, content_type: content_type)
         end
@@ -323,7 +325,10 @@ module Tzispa
         when '__empty__'
           Engine.empty
         when template.id
-          parser.template
+          # to avoid infinite recursion
+          template.type == :block ?
+            template :
+            Engine.block(name: id, domain: domain, content_type: content_type)
         else
           Engine.block(name: id, domain: domain, content_type: content_type)
         end
