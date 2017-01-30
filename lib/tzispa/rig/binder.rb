@@ -15,7 +15,7 @@ module Tzispa
 
       attr_reader :context, :data_struct, :parser
       def_delegators :@parser, :attribute_tags
-      def_delegators :@context, :app, :request, :response, :session, :router_params, :cache
+      def_delegators :@context, :app, :request, :response, :session, :router_params, :cache, :attr_cache
       def_delegators :app, :repository, :config, :logger
 
 
