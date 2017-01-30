@@ -15,7 +15,7 @@ module Tzispa
 
       attr_reader :context, :data_struct, :parser
       def_delegators :@parser, :attribute_tags
-      def_delegators :@context, :app, :request, :response, :session, :router_params, :cache, :attr_cache
+      def_delegators :@context, :app, :request, :response, :session, :router_params, :cache
       def_delegators :app, :repository, :config, :logger
 
 
@@ -51,6 +51,12 @@ module Tzispa
         raise UnknownTag.new("#{self.class.name} there isn't any loop tagged '#{loop_id}'") unless loop_parser && loop_parser.count > 0
         raise DuplicatedLoop.new("#{self.class.name} there are #{loop_parser.count} loops tagged '#{loop_id}' at the same level: only one allowed") unless loop_parser.count == 1
         LoopBinder.new loop_parser[0], @context
+      end
+
+      def attr_cache(*attrs)
+        attrs.each { |attrib|
+          cache[attrib] = send(attrib) if respond_to?(attrib)
+        }
       end
 
     end
