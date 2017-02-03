@@ -10,7 +10,7 @@ module Tzispa
     class Engine
       include Singleton
 
-      @@cache_size = 128
+      @@cache_size = 512
       @@singleton__mutex__ = Mutex.new
 
       def initialize
@@ -48,17 +48,17 @@ module Tzispa
       private
 
       def cache_template(name, domain, block_type, content_type, params)
-        key = Digest::SHA256.hexdigest("#{domain}/#{block_type}/#{name}/#{content_type}").to_sym
-        (get_template(key, name, domain, block_type, content_type) || set_template(key, name, domain, block_type, content_type)).dup.tap { |ctpl|
+        key = "#{domain}/#{block_type}/#{name}/#{content_type}".to_sym
+        get_template(key, name, domain, block_type, content_type).dup.tap { |ctpl|
            ctpl.params = params if params
-         }
+        }
       end
 
       def get_template(key, name, domain, block_type, content_type)
-        if @cache.key?(key) && (@cache[key].modified? || !@cache[key].valid?)
+        if !@cache.key?(key) || @cache.key?(key) && (@cache[key].modified? || !@cache[key].valid?)
           set_template(key, name, domain, block_type, content_type)
         else
-          @cache[key] || set_template(key, name, domain, block_type, content_type)
+          @cache[key]
         end
       end
 
