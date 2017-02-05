@@ -11,10 +11,10 @@ module Tzispa
       include Singleton
 
       @@cache_size = 512
-      @@singleton__mutex__ = Mutex.new
+      @@cache_ttl  = 600 # 10 mins
 
       def initialize
-        @cache = LruRedux::ThreadSafeCache.new(@@cache_size)
+        @cache = LruRedux::TTL::ThreadSafeCache.new(@@cache_size, @@cache_ttl)
       end
 
       class << self
@@ -39,8 +39,12 @@ module Tzispa
           instance.send(:cache_template, name, domain, block_type, content_type, params)
         end
 
-        def cache_sizee=(sz)
+        def cache_size=(sz)
           @@cache_size = sz
+        end
+
+        def cache_ttl=(seconds)
+          @@cache_ttl = seconds
         end
 
       end
@@ -63,13 +67,7 @@ module Tzispa
       end
 
       def set_template(key, name, domain, block_type, content_type)
-        unless @@singleton__mutex__.locked?
-          @@singleton__mutex__.synchronize {
-            @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
-          }
-        else
-          @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
-        end
+        @cache[key] = Template.new(name: name, type: block_type, domain: domain, content_type: content_type).load!.parse!
       end
 
     end
