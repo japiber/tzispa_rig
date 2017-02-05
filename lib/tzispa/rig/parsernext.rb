@@ -1,378 +1,10 @@
-require 'forwardable'
-require 'tzispa/utils/string'
-require 'tzispa/rig/syntax'
-require 'tzispa/rig/engine'
+# frozen_string_literal: true
 
+require 'tzispa/rig/syntax'
+require 'tzispa/rig/token/builder'
 
 module Tzispa
   module Rig
-
-    class ParsedEntity
-      extend Forwardable
-
-      STRING_EMPTY = ''
-      RE_ANCHOR = /(@@\h+@@)/
-
-      attr_reader :type, :parser
-      def_delegators :@parser, :domain, :content_type, :template
-
-      def initialize(parser, type)
-        @parser = parser
-        @type = type
-      end
-
-      def self.instance(parser, type, match)
-        case type
-        when :meta
-          ParsedMeta.new parser, type, match[1]
-        when :var
-          ParsedVar.new parser, type, match[1], match[2]
-        when :url
-          ParsedUrl.new parser, match[1].to_sym, match[3], match[5], match[2]&.slice(1..-1)
-        when :api
-          ParsedApi.new parser, match[1].to_sym, match[3], match[4], match[5], match[6], match[2]&.slice(1..-1)
-        when :loop
-          ParsedLoop.new parser, type, match[3], match[4]
-        when :ife
-          ParsedIfe.new parser, type, match[7], match[8], match[10]
-        when :blk
-          ParsedBlock.new parser, type, match[3], match[4]
-        when :iblk
-          ParsedIBlock.new parser, type, match[7], match[8], match[9], match[10], match[11]
-        when :static
-          ParsedStatic.new parser, type, match[14], match[15]
-        end
-      end
-
-      def anchor
-        #[[object_id].pack("h*")].pack("m0")
-        @anchor ||= "@@#{"%x" % object_id}@@".freeze
-      end
-
-    end
-
-    class ParsedMeta < ParsedEntity
-
-      attr_reader :id
-
-      def initialize(parser, type, id)
-        super(parser, type)
-        @id = id.to_sym
-      end
-
-      def render(binder)
-        if binder.data.respond_to? @id
-          binder.data.send(@id).to_s
-        else
-          unknown
-        end
-      end
-
-      private
-
-      def unknown
-        @unknown ||= "#{@id}:unknown!!"
-      end
-
-    end
-
-
-    class ParsedVar < ParsedEntity
-      include Tzispa::Utils::String
-
-      attr_reader :id
-
-      def initialize(parser, type, format, id)
-        super(parser, type)
-        @format = format
-        @id = id.to_sym
-      end
-
-      def render(binder)
-        if binder.data.respond_to?(@id)
-          value = binder.data.send(@id).to_s
-          escaper = :"escape_#{parser.content_type}"
-          respond_to?(escaper) ? send(escaper, value) : value
-        else
-          unknown
-        end
-      end
-
-      private
-
-      def unknown
-        @unknown ||= "#{@id}:unknown!!".freeze
-      end
-
-    end
-
-
-    class ParsedUrl < ParsedEntity
-
-      attr_reader :layout, :params, :app_name
-
-      def initialize(parser, type, layout, params, app_name = nil)
-        super(parser, type)
-        @layout = layout
-        @params = params
-        @app_name = app_name&.to_sym
-      end
-
-      def render(binder)
-        b_layout = bind_value(@layout.dup, binder).to_sym
-        h_params = Parameters.new(@params&.dup&.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }).to_h
-        case type
-        when :purl
-          app_name ?
-            binder.context.app_layout_path(app_name, b_layout, h_params) :
-            binder.context.layout_path(b_layout, h_params)
-        when :url
-          app_name ?
-            binder.context.app_layout_canonical_url(app_name, b_layout, h_params) :
-            binder.context.layout_canonical_url(b_layout, h_params)
-        end
-      end
-
-      def bind_value(value, binder)
-        value.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }
-      end
-
-    end
-
-
-    class ParsedApi < ParsedEntity
-
-      attr_reader :handler, :verb, :predicate, :app_name
-
-      def initialize(parser, type, handler, verb, predicate, sufix, app_name = nil)
-        super(parser, type)
-        @handler = handler
-        @verb = verb
-        @predicate = predicate
-        @sufix = sufix
-        @app_name = app_name&.to_sym
-      end
-
-      def render(binder)
-        b_handler = bind_value @handler.dup, binder
-        b_verb = bind_value @verb.dup, binder
-        b_predicate = bind_value( @predicate.dup, binder ) if @predicate
-        b_sufix = bind_value( @sufix.dup, binder ) if @sufix
-        binder.context.send(type.to_sym, b_handler, b_verb, b_predicate, b_sufix, app_name)
-      end
-
-      private
-
-      def bind_value(value, binder)
-        value.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }
-      end
-
-    end
-
-
-    class ParsedLoop < ParsedEntity
-      extend Forwardable
-
-      attr_reader :id, :body_parser
-      def_delegators :@body_parser, :attribute_tags, :loop_parser
-
-      def initialize(parser, type, id, body)
-        super(parser, type)
-        @id = id.to_sym
-        @body = body
-      end
-
-      def parse!
-        @body_parser = ParserNext.new(template, @body, parent: parser ).parse!
-        self
-      end
-
-      def render(binder)
-        String.new.tap { |text|
-          looper = binder.data.send(@id) if binder.data.respond_to?(@id)
-          looper.data.each { |loop_item|
-            text << body_parser.render(loop_item) if loop_item
-          } if looper
-        }
-      end
-
-    end
-
-
-    class ParsedIfe < ParsedEntity
-
-      attr_reader :test, :then_parser, :else_parser
-
-      def initialize(parser, type, test, then_body, else_body)
-        super(parser, type)
-        @test = test.to_sym
-        @then_body = then_body
-        @else_body = else_body
-      end
-
-      def parse!
-        @then_parser = ParserNext.new(template, @then_body, parent: parser ).parse!
-        @else_parser = @else_body ? ParserNext.new(template,  @else_body, parent: parser ).parse! : nil
-        self
-      end
-
-      def attribute_tags
-        @attribute_tags ||= [test].concat(then_parser.attribute_tags).concat(else_parser&.attribute_tags || Array.new).compact.uniq.freeze
-      end
-
-      def loop_parser(id)
-        @then_parser.loop_parser(id).concat(else_parser&.loop_parser(id) || Array.new).compact.freeze
-      end
-
-      def render(binder)
-        test_eval = binder.data && binder.data.respond_to?(test) && binder.data.send(test)
-        ifeparser = test_eval ? then_parser : else_parser
-        ifeparser ? ifeparser.render(binder) : STRING_EMPTY
-      end
-
-    end
-
-    class ParsedBlock < ParsedEntity
-
-      attr_reader :id, :params
-
-      def initialize(parser, type, id, params)
-        super(parser, type)
-        @id = id
-        @params = params
-      end
-
-      def parse!
-        # to avoid infinite recursion
-        @parsed_block = obtain_block @id
-        parser.childrens << @parsed_block
-        self
-      end
-
-      def render(binder)
-        blk = @parsed_block.dup
-        blk.params = bind_value(@params.dup, binder) if @params
-        blk.render binder.context
-      end
-
-      private
-
-      def bind_value(value, binder)
-        value.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }
-      end
-
-      def obtain_block(id)
-        case id
-        when '__empty__'
-          Engine.empty
-        when template.id
-          # to avoid infinite recursion
-          template.type == :block ?
-            template :
-            Engine.block(name: id, domain: domain, content_type: content_type)
-        else
-          Engine.block(name: id, domain: domain, content_type: content_type)
-        end
-      end
-
-
-    end
-
-
-    class ParsedIBlock < ParsedEntity
-
-      attr_reader :id, :id_then, :params_then, :id_else, :params_else
-
-      def initialize(parser, type, test, id_then, params_then, id_else, params_else)
-        super(parser, type)
-        @id = test
-        @id_then = id_then
-        @params_then = params_then
-        @id_else = id_else
-        @params_else = params_else
-      end
-
-      def parse!
-        @block_then = obtain_block @id_then
-        @block_else = obtain_block @id_else
-        parser.childrens << @block_then << @block_else
-        self
-      end
-
-      def render(binder)
-        if binder.data.respond_to?(@id) && binder.data.send(@id)
-          blk = @block_then.dup
-          blk.params = bind_value(@params_then.dup, binder) if @params_then
-        else
-          blk = @block_else.dup
-          blk.params = bind_value(@params_else.dup, binder) if @params_else
-        end
-        blk.render binder.context
-      end
-
-      private
-
-      def obtain_block(id)
-        case id
-        when '__empty__'
-          Engine.empty
-        when template.id
-          # to avoid infinite recursion
-          template.type == :block ?
-            template :
-            Engine.block(name: id, domain: domain, content_type: content_type)
-        else
-          Engine.block(name: id, domain: domain, content_type: content_type)
-        end
-      end
-
-      def bind_value(value, binder)
-        value.gsub(RE_ANCHOR) { |match|
-          parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-        }
-      end
-
-
-    end
-
-
-    class ParsedStatic < ParsedEntity
-
-      attr_reader :id, :params
-
-      def initialize(parser, type, id, params)
-        super(parser, type)
-        @id = id
-        @params = params
-      end
-
-      def parse!
-        @parsed_static = Engine.static name: @id, domain: domain, content_type: content_type
-        parser.childrens << @parsed_static
-        self
-      end
-
-      def render(binder)
-        blk = @parsed_static.dup
-        if @params
-          b_params = @params.dup.gsub(RE_ANCHOR) { |match|
-            parser.the_parsed.select { |p| p.anchor == match}.first.render(binder)
-          }
-          blk.params = b_params
-        end
-        blk.render binder.context
-      end
-
-    end
-
 
     class ParserNext
 
@@ -380,7 +12,7 @@ module Tzispa
 
       include Tzispa::Rig::Syntax
 
-      attr_reader :flags, :template, :the_parsed, :domain, :format, :childrens, :bindable, :content_type
+      attr_reader :flags, :template, :tokens, :domain, :format, :childrens, :bindable, :content_type
 
       def initialize(template, text, domain: nil, content_type: nil, bindable: nil, parent: nil)
         @parsed = false
@@ -392,14 +24,14 @@ module Tzispa
       end
 
       def empty?
-        @the_parsed.empty?
+        @tokens.empty?
       end
 
       def parse!
         unless parsed?
           @attribute_tags  = nil
           @childrens = Array.new
-          @the_parsed = Array.new
+          @tokens = Array.new
           if bindable
             parse_flags
             parse_statements
@@ -418,27 +50,27 @@ module Tzispa
 
       def render(binder)
         @inner_text.dup.tap { |text|
-          @the_parsed.each { |value|
+          @tokens.each { |value|
             text.gsub! value.anchor, value.render(binder)
           }
         }.freeze
       end
 
       def attribute_tags
-        @attribute_tags ||= the_parsed.map { |p|
+        @attribute_tags ||= tokens.map { |p|
            p.id.to_sym if p.respond_to? :id
          }.concat(
-            the_parsed.map{ |p|
+            tokens.map{ |p|
               p.attribute_tags if p.type == :ife
             }
           ).compact.flatten.uniq.freeze
       end
 
       def loop_parser(id)
-        the_parsed.select{ |p|
+        tokens.select{ |p|
           p.type==:loop && p.id==id
         }.concat(
-          the_parsed.select{ |p|
+          tokens.select{ |p|
             p.type==:ife }.map {
                |p| p.loop_parser(id)
              }.flatten.compact
@@ -457,8 +89,8 @@ module Tzispa
       def parse_url_builder
         RIG_URL_BUILDER.each_key { |kre|
           @inner_text.gsub!(RIG_URL_BUILDER[kre]) { |match|
-            pe = ParsedEntity.instance(self, kre, Regexp.last_match )
-            @the_parsed << pe
+            pe = Tzispa::Rig::Token::Builder.instance(self, kre, Regexp.last_match )
+            @tokens << pe
             pe.anchor
           }
         }
@@ -467,8 +99,8 @@ module Tzispa
       def parse_expressions
         RIG_EXPRESSIONS.each { |kre, re|
           @inner_text.gsub!(re) { |match|
-            pe = ParsedEntity.instance(self, kre, Regexp.last_match )
-            @the_parsed << pe
+            pe = Tzispa::Rig::Token::Builder.instance(self, kre, Regexp.last_match )
+            @tokens << pe
             pe.anchor
           }
         }
@@ -477,8 +109,8 @@ module Tzispa
       def parse_statements
         @inner_text.gsub!(RIG_STATEMENTS) { |match|
           type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new)
-          pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
-          @the_parsed << pe.parse!
+          pe = Tzispa::Rig::Token::Builder.instance(self, type.to_sym, Regexp.last_match )
+          @tokens << pe.parse!
           pe.anchor
         }
       end
@@ -487,8 +119,8 @@ module Tzispa
         reTemplates = Regexp.new RIG_TEMPLATES.values.map{ |re| "(#{re})"}.join('|')
         @inner_text.gsub!(reTemplates) { |match|
           type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new) << (Regexp.last_match[13] || String.new)
-          pe = ParsedEntity.instance(self, type.to_sym, Regexp.last_match )
-          @the_parsed << pe.parse!
+          pe = Tzispa::Rig::Token::Builder.instance(self, type.to_sym, Regexp.last_match )
+          @tokens << pe.parse!
           pe.anchor
         }
       end
