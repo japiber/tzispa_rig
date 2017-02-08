@@ -9,8 +9,7 @@ module Tzispa
       class Builder
         extend Forwardable
 
-        STRING_EMPTY = ''
-        RE_ANCHOR = /(@@\h+@@)/
+        RE_ANCHOR = /(\$\$\h+\$\$)/
 
         attr_reader :type, :parser
         def_delegators :@parser, :domain, :content_type, :template
@@ -44,7 +43,7 @@ module Tzispa
         end
 
         def anchor
-          @anchor ||= "@@#{"%x" % object_id}@@".freeze
+          @anchor ||= "$$#{"%x" % object_id}$$".freeze
         end
 
       end
@@ -52,8 +51,8 @@ module Tzispa
       require 'tzispa/rig/token/api_url'
       require 'tzispa/rig/token/expression'
       require 'tzispa/rig/token/statement'
-      require 'tzispa/rig/token/template'
-      
+      require 'tzispa/rig/token/block'
+
 
     end
   end

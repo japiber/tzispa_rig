@@ -103,7 +103,7 @@ module Tzispa
 
       def initialize(name:, type:, domain:, content_type:, params: nil)
         @id = name
-        name.downcase.split('.').tap { |sdn|
+        name.downcase.split('@').tap { |sdn|
           @subdomain = sdn.length > 1 ? sdn.first : nil
           @name = sdn.last
         }
@@ -138,10 +138,7 @@ module Tzispa
       end
 
       def path
-        String.new.tap { |pth|
-          pth << "#{domain.path}/rig/#{type.to_s.downcase}"
-          pth << "/#{subdomain}" if subdomain
-        }
+        @path ||= "#{domain.path}/view/#{subdomain || '_'}/#{type.to_s.downcase}"
       end
 
       def create(content='')
@@ -175,20 +172,22 @@ module Tzispa
       end
 
       def binder_require
-        "rig/#{@type}/#{@subdomain+'/' if @subdomain}#{@name.downcase}"
+        @binder_require ||= "view/#{subdomain || '_'}/#{type}/#{name.downcase}"
       end
 
       def binder_namespace
-        "#{@domain.name.to_s.camelize}::Rig::#{@type.to_s.capitalize}#{'::' + @subdomain.camelize if @subdomain}"
+        @binder_namespace ||= "#{domain.name.to_s.camelize}::#{subdomain&.camelize}View"
       end
 
       def binder_class_name
-        @name.camelize
+        @binder_class_name ||= @name.camelize
       end
 
       def binder_class
-        @domain.require binder_require
-        "#{binder_namespace}::#{binder_class_name}".constantize
+        @binder_class ||= begin
+          domain.require binder_require
+          "#{binder_namespace}::#{binder_class_name}#{type.to_s.capitalize}".constantize
+        end
       end
 
       private
@@ -201,7 +200,7 @@ module Tzispa
       def create_binder
         ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
           f.puts write_binder_code
-        } if @type == :block
+        } if type == :block
       end
 
       def write_binder_code

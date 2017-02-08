@@ -12,7 +12,7 @@ module Tzispa
 
       include Tzispa::Rig::Syntax
 
-      attr_reader :flags, :template, :tokens, :domain, :format, :childrens, :bindable, :content_type
+      attr_reader :flags, :template, :tokens, :domain, :format, :childrens, :bindable, :content_type, :inner_text
 
       def initialize(template, text, domain: nil, content_type: nil, bindable: nil, parent: nil)
         @parsed = false
@@ -32,12 +32,12 @@ module Tzispa
           @attribute_tags  = nil
           @childrens = Array.new
           @tokens = Array.new
+          parse_flags
           if bindable
-            parse_flags
             parse_statements
             parse_expressions
-            parse_templates
             parse_url_builder
+            parse_templates
           end
           @parsed = true
         end
@@ -80,49 +80,48 @@ module Tzispa
       private
 
       def parse_flags
-        @inner_text.gsub!(RIG_EMPTY[:flags]) { |match|
+        while match = @inner_text.match(RIG_EMPTY[:flags]) do
           @flags = Regexp.last_match(1)
-          EMPTY_STRING
-        }
+          @inner_text.gsub! match[0], ''
+        end
       end
 
       def parse_url_builder
         RIG_URL_BUILDER.each_key { |kre|
-          @inner_text.gsub!(RIG_URL_BUILDER[kre]) { |match|
-            pe = Tzispa::Rig::Token::Builder.instance(self, kre, Regexp.last_match )
-            @tokens << pe
-            pe.anchor
-          }
+          while match = @inner_text.match(RIG_URL_BUILDER[kre]) do
+            tk = Token::Builder.instance(self, kre, match )
+            @tokens << tk
+            @inner_text.gsub! match[0], tk.anchor
+          end
         }
       end
 
       def parse_expressions
         RIG_EXPRESSIONS.each { |kre, re|
-          @inner_text.gsub!(re) { |match|
-            pe = Tzispa::Rig::Token::Builder.instance(self, kre, Regexp.last_match )
-            @tokens << pe
-            pe.anchor
-          }
+          while match = @inner_text.match(re) do
+            tk = Token::Builder.instance(self, kre, match )
+            @tokens << tk
+            @inner_text.gsub! match[0], tk.anchor
+          end
         }
       end
 
       def parse_statements
-        @inner_text.gsub!(RIG_STATEMENTS) { |match|
-          type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new)
-          pe = Tzispa::Rig::Token::Builder.instance(self, type.to_sym, Regexp.last_match )
-          @tokens << pe.parse!
-          pe.anchor
-        }
+        while match = @inner_text.match(RIG_STATEMENTS) do
+          type = (match[2] || String.new) << (match[6] || String.new)
+          tk = Token::Builder.instance(self, type.to_sym, match )
+          @tokens << tk.parse!
+          @inner_text.gsub! match[0], tk.anchor
+        end
       end
 
       def parse_templates
-        reTemplates = Regexp.new RIG_TEMPLATES.values.map{ |re| "(#{re})"}.join('|')
-        @inner_text.gsub!(reTemplates) { |match|
-          type = (Regexp.last_match[2] || String.new) << (Regexp.last_match[6] || String.new) << (Regexp.last_match[13] || String.new)
-          pe = Tzispa::Rig::Token::Builder.instance(self, type.to_sym, Regexp.last_match )
-          @tokens << pe.parse!
-          pe.anchor
-        }
+        while match = @inner_text.match(RIG_TEMPLATES) do
+          type = (match[2] || String.new) << (match[6] || String.new) << (match[13] || String.new)
+          tk = Token::Builder.instance(self, type.to_sym, match )
+          @tokens << tk.parse!
+          @inner_text.gsub! match[0], tk.anchor
+        end
       end
 
     end

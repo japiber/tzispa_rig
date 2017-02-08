@@ -17,6 +17,7 @@ module Tzispa
       def_delegators :@parser, :attribute_tags
       def_delegators :@context, :app, :request, :response, :session, :router_params, :cache
       def_delegators :app, :repository, :config, :logger
+      alias :tags :attribute_tags
 
 
       def initialize(parser, context)
@@ -24,8 +25,6 @@ module Tzispa
         @context = context
         @data_struct = attribute_tags.count > 0 ? Struct.new(*attribute_tags) : Struct.new(nil)
       end
-
-      alias :tags :attribute_tags
 
       # Gets a LoopBinder context for the given loop_id in a rig template
       #

@@ -21,14 +21,14 @@ module Tzispa
         end
 
         def parse!
-          @body_parser = Tzispa::Rig::ParserNext.new(template, @body, parent: parser ).parse!
+          @body_parser = Rig::ParserNext.new(template, @body, parent: parser, bindable: true ).parse!
           self
         end
 
         def render(binder)
           String.new.tap { |text|
             looper = binder.data.send(@id) if binder.data.respond_to?(@id)
-            looper.data.each { |loop_item|
+            looper&.data&.each { |loop_item|
               text << body_parser.render(loop_item) if loop_item
             } if looper
           }
@@ -49,8 +49,8 @@ module Tzispa
         end
 
         def parse!
-          @then_parser = Tzispa::Rig::ParserNext.new(template, @then_body, parent: parser ).parse!
-          @else_parser = @else_body ? Tzispa::Rig::ParserNext.new(template,  @else_body, parent: parser ).parse! : nil
+          @then_parser = Rig::ParserNext.new(template, @then_body, parent: parser ).parse!
+          @else_parser = @else_body ? Rig::ParserNext.new(template,  @else_body, parent: parser ).parse! : nil
           self
         end
 
@@ -65,7 +65,7 @@ module Tzispa
         def render(binder)
           test_eval = binder.data && binder.data.respond_to?(test) && binder.data.send(test)
           ifeparser = test_eval ? then_parser : else_parser
-          ifeparser ? ifeparser.render(binder) : STRING_EMPTY
+          ifeparser ? ifeparser.render(binder) : ''
         end
 
       end

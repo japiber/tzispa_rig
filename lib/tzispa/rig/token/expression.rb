@@ -26,7 +26,7 @@ module Tzispa
         private
 
         def unknown
-          @unknown ||= "#{@id}:unknown!!"
+          @unknown ||= "#{@id}"
         end
 
       end
@@ -55,7 +55,7 @@ module Tzispa
         private
 
         def unknown
-          @unknown ||= "#{@id}:unknown!!".freeze
+          @unknown ||= "#{@id}".freeze
         end
 
       end
