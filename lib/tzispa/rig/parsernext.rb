@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'tzispa/rig/syntax'
-require 'tzispa/rig/token/builder'
 
 module Tzispa
   module Rig
@@ -12,15 +11,17 @@ module Tzispa
 
       include Tzispa::Rig::Syntax
 
-      attr_reader :flags, :template, :tokens, :domain, :format, :childrens, :bindable, :content_type, :inner_text
+      attr_reader :flags, :template, :tokens, :domain, :format, :childrens,
+                  :bindable, :content_type, :inner_text, :content_escape_method
 
-      def initialize(template, text, domain: nil, content_type: nil, bindable: nil, parent: nil)
+      def initialize(template = nil, text: nil, domain: nil, content_type: nil, bindable: nil, parent: nil)
         @parsed = false
         @template = template
-        @inner_text = text.dup
+        @inner_text = (text || template&.content)&.dup
         @domain = domain || parent.domain
         @bindable = bindable.nil? ? parent.bindable : bindable
         @content_type = content_type || parent.content_type
+        @content_escape_method = :"escape_#{content_type}"
       end
 
       def empty?
@@ -89,7 +90,7 @@ module Tzispa
       def parse_url_builder
         RIG_URL_BUILDER.each_key { |kre|
           while match = @inner_text.match(RIG_URL_BUILDER[kre]) do
-            tk = Token::Builder.instance(self, kre, match )
+            tk = Token.instance(self, kre, match )
             @tokens << tk
             @inner_text.gsub! match[0], tk.anchor
           end
@@ -99,7 +100,7 @@ module Tzispa
       def parse_expressions
         RIG_EXPRESSIONS.each { |kre, re|
           while match = @inner_text.match(re) do
-            tk = Token::Builder.instance(self, kre, match )
+            tk = Token.instance(self, kre, match )
             @tokens << tk
             @inner_text.gsub! match[0], tk.anchor
           end
@@ -109,7 +110,7 @@ module Tzispa
       def parse_statements
         while match = @inner_text.match(RIG_STATEMENTS) do
           type = (match[2] || String.new) << (match[6] || String.new)
-          tk = Token::Builder.instance(self, type.to_sym, match )
+          tk = Token.instance(self, type.to_sym, match )
           @tokens << tk.parse!
           @inner_text.gsub! match[0], tk.anchor
         end
@@ -118,7 +119,7 @@ module Tzispa
       def parse_templates
         while match = @inner_text.match(RIG_TEMPLATES) do
           type = (match[2] || String.new) << (match[6] || String.new) << (match[13] || String.new)
-          tk = Token::Builder.instance(self, type.to_sym, match )
+          tk = Token.instance(self, type.to_sym, match )
           @tokens << tk.parse!
           @inner_text.gsub! match[0], tk.anchor
         end
