@@ -14,12 +14,12 @@ module TemplateTestHelper
   TPL_IFE  = '<ife:condition> ife testing <var:uno/> <var:dos/>\n </ife:condition> <ife:condition> <var:uno/> {%dos%} {%tres%} <else:condition/> <var:dos/> </ife:condition> '
   TPL_URL1  = '<url:article[id=111,title=this_is_an_url_title]/>'
   TPL_URL2  = '<purl:article_list[id={%idp%},title=this_is_an_url_title]/>'
-  TPL_URL3  = '<purl@adminapp:article_edit[id=1220,format=json]/>'
+  TPL_URL3  = '<purl#adminapp:article_edit[id=1220,format=json]/>'
   TPL_API1  = '<api:article:add/>'
-  TPL_API2  = '<api@adminapp:article:edit:{%idarticle%}/>'
+  TPL_API2  = '<api#adminapp:article:edit:{%idarticle%}/>'
   TPL_API3  = '<sapi:order:detail_sum:2016_10,2016_12/>'
-  TPL_BLK  = '<blk:detail/> <blk:product.detail[tab={%selected_tab%}]/> <iblk:test:block_one[select=50]:product.block_two/> <iblk:test:product.block_one:block_two[select=10]/>'
-  TPL_STA  = '<static:whatsnew/> <static:product.whatsnew[section=retail]/> <static:product.whatsnew[section={%selected%}]/>'
+  TPL_BLK  = '<blk:detail/> <blk:product@detail[tab={%selected_tab%}]/> <iblk:test:block_one[select=50]:product@block_two/> <iblk:test:product@block_one:block_two[select=10]/>'
+  TPL_STA  = '<static:whatsnew/> <static:product@whatsnew[section=retail]/> <static:product@whatsnew[section={%selected%}]/>'
 
 
   FILENAME = "test/res/testfile"
@@ -47,13 +47,13 @@ module TemplateTestHelper
   let(:index_block) { Tzispa::Rig::Template.new name: 'index', type: :block, domain: domain, content_type: 'txt' }
   let(:index_static) { Tzispa::Rig::Template.new name: 'index', type: :static, domain: domain, content_type: 'txt' }
   let(:detail_block) { Tzispa::Rig::Template.new name: 'detail', type: :block, domain: domain, content_type: :htm }
-  let(:product_detail_block) { Tzispa::Rig::Template.new name: 'product.detail', type: :block, domain: domain, content_type: :htm }
+  let(:product_detail_block) { Tzispa::Rig::Template.new name: 'product@detail', type: :block, domain: domain, content_type: :htm }
   let(:block_one) { Tzispa::Rig::Template.new name: 'block_one', type: :block, domain: domain, content_type: :htm }
-  let(:product_block_two) { Tzispa::Rig::Template.new name: 'product.block_two', type: :block, domain: domain, content_type: :htm }
-  let(:product_block_one) { Tzispa::Rig::Template.new name: 'product.block_one', type: :block, domain: domain, content_type: :htm }
+  let(:product_block_two) { Tzispa::Rig::Template.new name: 'product@block_two', type: :block, domain: domain, content_type: :htm }
+  let(:product_block_one) { Tzispa::Rig::Template.new name: 'product@block_one', type: :block, domain: domain, content_type: :htm }
   let(:block_two) { Tzispa::Rig::Template.new name: 'block_two', type: :block, domain: domain, content_type: :htm }
   let(:whatsnew_static) { Tzispa::Rig::Template.new name: 'whatsnew', type: :static, domain: domain, content_type: :htm }
-  let(:product_whatsnew_static) { Tzispa::Rig::Template.new name: 'product.whatsnew', type: :static, domain: domain, content_type: :htm }
+  let(:product_whatsnew_static) { Tzispa::Rig::Template.new name: 'product@whatsnew', type: :static, domain: domain, content_type: :htm }
   let(:all_templates) { [detail_block, product_detail_block, block_one, product_block_two, product_block_one, block_two, whatsnew_static, product_whatsnew_static] }
 
   let(:binder_fake) {
