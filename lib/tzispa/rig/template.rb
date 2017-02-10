@@ -115,7 +115,7 @@ module Tzispa
       end
 
       def parse!
-        @parser = ParserNext.new self, content, domain: domain, content_type: content_type, bindable: bindable?
+        @parser = ParserNext.new self, domain: domain, content_type: content_type, bindable: bindable?
         parser.parse!
         self
       end
