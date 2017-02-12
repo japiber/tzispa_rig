@@ -141,7 +141,7 @@ class ParsernextTest < Minitest::Test
     assert_instance_of Tzispa::Rig::TypeToken::Url, parser.tokens[2]
     assert_equal parser.tokens[0].id, :idp
     assert_equal parser.tokens[1].layout, 'article'
-    assert_equal parser.tokens[2].layout, 'article_list'
+    assert_equal parser.tokens[2].layout, 'product@list'
     assert_equal parser.tokens[3].layout, 'article_edit'
     assert_equal parser.tokens[1].params, 'id=111,title=this_is_an_url_title'
     assert_equal parser.tokens[2].params, "id=#{parser.tokens[0].anchor},title=this_is_an_url_title"
@@ -160,7 +160,7 @@ class ParsernextTest < Minitest::Test
     parser = Tzispa::Rig::ParserNext.new text: TPL_URL2, domain: domain, content_type: :htm, bindable: true
     parser.parse!
     binder = binder_fake.new parser, context, [2091]
-    assert_equal parser.render(binder), '/article_list/this_is_an_url_title/2091'
+    assert_equal parser.render(binder), '/product@list/this_is_an_url_title/2091'
 
     parser = Tzispa::Rig::ParserNext.new text: TPL_URL3, domain: domain, content_type: :htm, bindable: true
     parser.parse!

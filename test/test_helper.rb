@@ -13,7 +13,7 @@ module TemplateTestHelper
   TPL_LOOP = '<loop:literator> loop testing <var:uno/> <var:dos/>\n <var:uno/> </loop:literator> <var:tres/>'
   TPL_IFE  = '<ife:condition> ife testing <var:uno/> <var:dos/>\n </ife:condition> <ife:condition> <var:uno/> {%dos%} {%tres%} <else:condition/> <var:dos/> </ife:condition> '
   TPL_URL1  = '<url:article[id=111,title=this_is_an_url_title]/>'
-  TPL_URL2  = '<purl:article_list[id={%idp%},title=this_is_an_url_title]/>'
+  TPL_URL2  = '<purl:product@list[id={%idp%},title=this_is_an_url_title]/>'
   TPL_URL3  = '<purl#adminapp:article_edit[id=1220,format=json]/>'
   TPL_API1  = '<api:article:add/>'
   TPL_API2  = '<api#adminapp:article:edit:{%idarticle%}/>'
@@ -44,6 +44,7 @@ module TemplateTestHelper
   let(:file) { Tzispa::Rig::File.new(FILENAME) }
   let(:nofile) { Tzispa::Rig::File.new "test/res/notexistingfile" }
   let(:index_layout) { Tzispa::Rig::Template.new name: 'index', type: :layout, domain: domain, content_type: 'txt' }
+  let(:productlist_layout) { Tzispa::Rig::Template.new name: 'product@list', type: :layout, domain: domain, content_type: 'htm' }
   let(:index_block) { Tzispa::Rig::Template.new name: 'index', type: :block, domain: domain, content_type: 'txt' }
   let(:index_static) { Tzispa::Rig::Template.new name: 'index', type: :static, domain: domain, content_type: 'txt' }
   let(:detail_block) { Tzispa::Rig::Template.new name: 'detail', type: :block, domain: domain, content_type: :htm }
