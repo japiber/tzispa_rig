@@ -2,6 +2,16 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.0
+- Rig templates syntax changes in url/purl and blk/iblk/static
+- Added support for subdoamins in layouts
+- new rig engine interface now shared by all apps
+- added some testing with minitest
+- escape (by content type) var tags values before render
+- allow recursive template block calls
+- code refactoring & templates namespace simplification
+- rig-parser implementation improvements
+
 ## v0.4.5
 - code fixes for replacing TzString with String refinement
 

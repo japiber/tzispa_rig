@@ -68,8 +68,8 @@ private
 attr_reader :idb
 
 def load_brand
-  brand = context.repository[:brand, :ecomm_shop][idb]
-  data(
+  brand = repository[:brand, :ecomm_shop][idb]
+  attach(
     idb: brand.id,
     name: brand.name,
     skey: brand.skey
@@ -111,7 +111,9 @@ In the binder you must define customer_exist
 def bind!
   idc = context.router_params[:id0]
   customer = context.repository[:customer, :ecomm_shop][idb]
-  data.customer_exist = !customer.nil?
+  attach(
+    customer_exist: !customer.nil?
+  )
 end
 
 ```
@@ -141,14 +143,16 @@ In the binder you must use the 'loop_binder' method
 ```ruby
 
 def bind!
-  data.lbrands = loop_binder(:lbrands).bind!(&load_brands)
+  attach(
+    lbrands: loop_binder(:lbrands).bind!(&load_brands)
+  )
 end
 
 private
 
 def load_brands
   Proc.new {
-    context.repository[:brand, :ecomm_shop].list.map { |b|
+    repository[:brand, :ecomm_shop].list.map { |b|
       loop_item(
         id: b.id,
         skey: b.skey,
