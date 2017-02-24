@@ -4,6 +4,9 @@ require 'forwardable'
 require 'fileutils'
 require 'tzispa/utils/string'
 require 'tzispa/utils/indenter'
+require 'tzispa/rig/parameters'
+require 'tzispa/rig/parsernext'
+require 'tzispa/rig/binder'
 
 module Tzispa
   module Rig
@@ -200,7 +203,7 @@ module Tzispa
       def create_binder
         ::File.open("#{domain.path}/#{binder_require}.rb", "w") { |f|
           f.puts write_binder_code
-        } if type == :block
+        } if [:block, :layout].include?(type)
       end
 
       def write_binder_code
