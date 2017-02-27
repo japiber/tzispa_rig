@@ -212,10 +212,10 @@ class ParsernextTest < Minitest::Test
     parser = Tzispa::Rig::ParserNext.new text: TPL_BLK, domain: domain, content_type: :htm, bindable: true
     parser.parse!
     assert_equal parser.tokens.count, 5
-    assert_instance_of Tzispa::Rig::TypeToken::Block, parser.tokens[1]
-    assert_instance_of Tzispa::Rig::TypeToken::Block, parser.tokens[2]
-    assert_instance_of Tzispa::Rig::TypeToken::IBlock, parser.tokens[3]
-    assert_instance_of Tzispa::Rig::TypeToken::IBlock, parser.tokens[4]
+    assert_instance_of Tzispa::Rig::TypeToken::Blk, parser.tokens[1]
+    assert_instance_of Tzispa::Rig::TypeToken::Blk, parser.tokens[2]
+    assert_instance_of Tzispa::Rig::TypeToken::Iblk, parser.tokens[3]
+    assert_instance_of Tzispa::Rig::TypeToken::Iblk, parser.tokens[4]
     assert_equal parser.tokens[1].id, 'detail'
     assert_equal parser.tokens[2].id, 'product@detail'
     assert_equal parser.tokens[2].params, "tab=#{parser.tokens[0].anchor}"
