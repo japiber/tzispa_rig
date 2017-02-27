@@ -7,12 +7,11 @@ module Tzispa
     module TypeToken
 
       class Meta < Rig::Token
-
         attr_reader :id
 
-        def initialize(parser, type, id)
-          super(parser, type)
-          @id = id.to_sym
+        def initialize(parser, match)
+          super(parser, :meta)
+          @id = match[1].to_sym
         end
 
         def render(binder)
@@ -26,21 +25,19 @@ module Tzispa
         private
 
         def unknown
-          @unknown ||= "#{@id}"
+          @unknown ||= id.to_s
         end
-
       end
-
 
       class Var < Rig::Token
         using Tzispa::Utils
 
         attr_reader :id
 
-        def initialize(parser, type, format, id)
-          super(parser, type)
-          @format = format
-          @id = id.to_sym
+        def initialize(parser, match)
+          super(parser, :var)
+          @format = match[1]
+          @id = match[2].to_sym
         end
 
         def render(binder)
@@ -55,9 +52,8 @@ module Tzispa
         private
 
         def unknown
-          @unknown ||= "#{@id}"
+          @unknown ||= @id.to_s
         end
-
       end
 
     end

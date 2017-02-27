@@ -12,52 +12,65 @@ module Tzispa
         attr_reader :id, :body_parser
         def_delegators :@body_parser, :attribute_tags, :loop_parser
 
-        def initialize(parser, type, id, body)
-          super(parser, type)
-          @id = id.to_sym
-          @body = body
+        def initialize(parser, match)
+          super(parser, :loop)
+          @id = match[3].to_sym
+          @body = match[4]
         end
 
         def parse!
-          @body_parser = Rig::ParserNext.new(template, text: @body, parent: parser, bindable: true ).parse!
+          @body_parser = Rig::ParserNext.new template: template,
+                                             text: @body,
+                                             parent: parser,
+                                             bindable: true
+          @body_parser.parse!
           self
         end
 
         def render(binder)
-          String.new.tap { |text|
+          String.new.tap do |text|
             looper = binder.data.send(@id) if binder.data.respond_to?(@id)
-            looper&.data&.each { |loop_item|
+            looper&.data&.each do |loop_item|
               text << body_parser.render(loop_item) if loop_item
-            } if looper
-          }
+            end
+          end
         end
-
       end
 
-
       class Ife < Rig::Token
-
         attr_reader :test, :then_parser, :else_parser
 
-        def initialize(parser, type, test, then_body, else_body)
-          super(parser, type)
-          @test = test.to_sym
-          @then_body = then_body
-          @else_body = else_body
+        def initialize(parser, match)
+          super(parser, :ife)
+          @test = match[7].to_sym
+          @then_body = match[8]
+          @else_body = match[10]
         end
 
         def parse!
-          @then_parser = Rig::ParserNext.new(template, text: @then_body, parent: parser ).parse!
-          @else_parser = @else_body ? Rig::ParserNext.new(template,  text: @else_body, parent: parser ).parse! : nil
+          @then_parser = Rig::ParserNext.new(template: template,
+                                             text: @then_body,
+                                             parent: parser).parse!
+          @else_parser = if @else_body
+                           Rig::ParserNext.new(template: template,
+                                               text: @else_body,
+                                               parent: parser).parse!
+                         end
           self
         end
 
         def attribute_tags
-          @attribute_tags ||= [test].concat(then_parser.attribute_tags).concat(else_parser&.attribute_tags || Array.new).compact.uniq.freeze
+          @attribute_tags ||= begin
+                               att = [test].concat(then_parser.attribute_tags)
+                               att.concat(else_parser&.attribute_tags || [])
+                               att.compact.uniq.freeze
+                             end
         end
 
         def loop_parser(id)
-          @then_parser.loop_parser(id).concat(else_parser&.loop_parser(id) || Array.new).compact.freeze
+          lpp = then_parser.loop_parser(id)
+          lpp.concat(else_parser&.loop_parser(id) || [])
+          lpp.compact.freeze
         end
 
         def render(binder)
@@ -65,7 +78,6 @@ module Tzispa
           ifeparser = test_eval ? then_parser : else_parser
           ifeparser ? ifeparser.render(binder) : ''
         end
-
       end
 
     end
