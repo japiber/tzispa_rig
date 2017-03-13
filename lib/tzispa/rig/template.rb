@@ -95,7 +95,7 @@ module Tzispa
     class Template < File
       extend Forwardable
 
-      using Tzispa::Utils
+      using Tzispa::Utils::TzString
 
       BASIC_TYPES    = [:layout, :block, :static].freeze
       RIG_EXTENSION  = 'rig'

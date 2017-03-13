@@ -30,7 +30,7 @@ module Tzispa
       end
 
       class Var < Rig::Token
-        using Tzispa::Utils
+        using Tzispa::Utils::TzString
 
         attr_reader :id
 
