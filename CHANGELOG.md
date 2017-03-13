@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.1
+- Bug fixes and code refactoring
+
 ## v0.5.0
 - Rig templates syntax changes in url/purl and blk/iblk/static
 - Added support for subdoamins in layouts
