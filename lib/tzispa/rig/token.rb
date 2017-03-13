@@ -9,7 +9,7 @@ module Tzispa
     class Token
       extend Forwardable
 
-      using Tzispa::Utils
+      using Tzispa::Utils::TzString
 
       RE_ANCHOR = /(\$\$\h+\$\$)/
 
