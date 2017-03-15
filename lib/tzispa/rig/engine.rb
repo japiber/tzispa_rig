@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require 'singleton'
 require 'digest'
-require 'lru_redux'
+require 'moneta'
 require 'tzispa/rig/template'
 
 module Tzispa
@@ -14,7 +14,8 @@ module Tzispa
       @cache_ttl  = 600
 
       def initialize
-        @cache = LruRedux::TTL::ThreadSafeCache.new(Engine.cache_size, Engine.cache_ttl)
+        @cache = Moneta.new(:LRUHash, threadsafe: true)
+        # @cache = LruRedux::TTL::ThreadSafeCache.new(Engine.cache_size, Engine.cache_ttl)
       end
 
       class << self
@@ -44,7 +45,7 @@ module Tzispa
       private
 
       def cache_template(name, domain, block_type, content_type, params)
-        key = "#{domain}/#{block_type}/#{name}/#{content_type}".to_sym
+        key = "#{domain.name}/#{block_type}/#{name}/#{content_type}".to_sym
         get_template(key, name, domain, block_type, content_type).dup.tap do |ctpl|
           ctpl.params = params if params
         end
