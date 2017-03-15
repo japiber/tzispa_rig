@@ -10,17 +10,12 @@ module Tzispa
     class Engine
       include Singleton
 
-      @cache_size = 512
-      @cache_ttl  = 600
-
       def initialize
         @cache = Moneta.new(:LRUHash, threadsafe: true)
         # @cache = LruRedux::TTL::ThreadSafeCache.new(Engine.cache_size, Engine.cache_ttl)
       end
 
       class << self
-        attr_accessor :cache_size, :cache_ttl
-
         def empty
           TemplateBase.new
         end
