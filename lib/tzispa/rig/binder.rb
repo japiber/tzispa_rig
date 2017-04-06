@@ -131,11 +131,15 @@ module Tzispa
       end
 
       def method_missing(method, *args, &generator)
-        @source_object.send(method, *args, &generator)
+        if respond_to_missing? method
+          @source_object.send(method, *args, &generator)
+        else
+          super
+        end
       end
 
-      def respond_to_missing?(method, *)
-        @source_object.respond_to?(method)
+      def respond_to_missing?(method)
+        @source_object.respond_to?(method, true)
       end
 
       def loop_item(params = nil)
