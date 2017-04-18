@@ -1,6 +1,6 @@
 # Tzispa Rig
 
-A general purpose template engine
+Lego-block style general purpose template engine
 
 ## Installation
 
