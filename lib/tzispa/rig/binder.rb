@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'forwardable'
+require 'json'
+require 'tzispa/utils/hash'
 
 module Tzispa
   module Rig
@@ -88,6 +90,8 @@ module Tzispa
     class TemplateBinder < Binder
       extend Forwardable
 
+      using Tzispa::Utils::TzHash
+
       attr_reader :template
       def_delegators :@template, :params
 
@@ -100,13 +104,26 @@ module Tzispa
         @data ||= @data_struct.new
       end
 
-      def attach(**params)
+      def attach(json = nil, **params)
+        attach_json(json) if json
         data.tap do |d|
           params.each do |k, v|
             raise UnknownTag.new(self.class.name, k) unless tags.include? k
-            d[k] = v
+            d[k] = v.is_a?(Enumerable) ? attach_loop(k, v) : v
           end
         end
+      end
+
+      def attach_json(data)
+        src = JSON.parse(data).symbolize!
+        attach(src.reject { |_, v| v.is_a?(Array) || v.is_a?(::Hash) })
+        attach(src.select { |_, v| v.is_a?(Array) }.map do |k, v|
+          [k, attach_loop(k, v)]
+        end.to_h)
+      end
+
+      def attach_loop(k, v)
+        loop_binder(k).bind! { v.map { |item| loop_item item.symbolize! } }
       end
 
       def self.for(template, context)
