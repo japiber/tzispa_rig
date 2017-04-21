@@ -108,7 +108,7 @@ module Tzispa
         attach_json(json) if json
         data.tap do |d|
           params.each do |k, v|
-            raise UnknownTag.new(self.class.name, k) unless tags.include? k
+            next unless tags.include? k
             d[k] = v.is_a?(Enumerable) ? attach_loop(k, v) : v
           end
         end
@@ -162,7 +162,7 @@ module Tzispa
       def loop_item(params = nil)
         (LoopItem.new self).tap do |item|
           params&.each do |k, v|
-            raise UnknownTag(self.class.name, k) unless tags.include? k
+            next unless tags.include? k
             item.data[k] = v
           end
         end
