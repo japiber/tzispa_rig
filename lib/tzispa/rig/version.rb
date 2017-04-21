@@ -3,7 +3,7 @@
 module Tzispa
   module Rig
 
-    VERSION = '0.5.1'
+    VERSION = '0.5.2'
     GEM_NAME = 'tzispa_rig'
 
   end

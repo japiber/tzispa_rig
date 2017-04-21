@@ -2,6 +2,11 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.2
+- replace lru_redux with moneta to improve template cache storage
+- added fallback to super in method_missing at LoopBinder
+- support for bind data from json
+
 ## v0.5.1
 - Bug fixes and code refactoring
 
