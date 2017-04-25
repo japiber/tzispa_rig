@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'json'
-require 'tzispa/utils/hash'
 
 module Tzispa
   module Rig
@@ -16,12 +14,6 @@ module Tzispa
     class DuplicatedLoop < StandardError
       def initialize(name, loop_id)
         super "#{name} there are many loops tagged '#{loop_id}' only 1 allowed at the same level"
-      end
-    end
-
-    class IsnotTemplateBinder < ArgumentError
-      def initialize(name)
-        super "Class #{name} isn't a TemplateBinder"
       end
     end
 
@@ -66,10 +58,8 @@ module Tzispa
       # loop_id<Symbol>: The id of the template loop to bind
       #
       def loop_binder(loop_id)
-        loop_parser = @parser.loop_parser loop_id
-        unknown? loop_parser
-        duplicated? loop_parser
-        LoopBinder.new loop_parser[0], @context
+        lp = loop_parser?(loop_id)
+        LoopBinder.new(lp.first, @context) if lp
       end
 
       def attr_cache(*attrs)
@@ -78,63 +68,14 @@ module Tzispa
 
       private
 
-      def unknown?(loop_parser)
-        raise UnknownTag.new(self.class.name, loop_parser.id) unless loop_parser.count.positive?
+      def loop_parser?(loop_id)
+        lp = @parser.loop_parser loop_id
+        duplicated? lp
+        lp if lp.count.positive?
       end
 
       def duplicated?(loop_parser)
-        raise DuplicatedLoop.new(self.class.name, loop_parser.id) unless loop_parser.count == 1
-      end
-    end
-
-    class TemplateBinder < Binder
-      extend Forwardable
-
-      using Tzispa::Utils::TzHash
-
-      attr_reader :template
-      def_delegators :@template, :params
-
-      def initialize(template, context)
-        super(template.parser, context)
-        @template = template
-      end
-
-      def data
-        @data ||= @data_struct.new
-      end
-
-      def attach(json = nil, **params)
-        attach_json(json) if json
-        data.tap do |d|
-          params.each do |k, v|
-            next unless tags.include? k
-            d[k] = v.is_a?(Enumerable) ? attach_loop(k, v) : v
-          end
-        end
-      end
-
-      def attach_json(data)
-        src = JSON.parse(data).symbolize!
-        attach(src.reject { |_, v| v.is_a?(Array) || v.is_a?(::Hash) })
-        attach(src.select { |_, v| v.is_a?(Array) }.map do |k, v|
-          [k, attach_loop(k, v)]
-        end.to_h)
-      end
-
-      def attach_loop(k, v)
-        loop_binder(k).bind! { v.map { |item| loop_item item.symbolize! } }
-      end
-
-      def self.for(template, context)
-        if template.bindable?
-          binder_class = template.binder_class
-          binder_class&.new(template, context)&.tap do |binder|
-            raise IsnotTemplateBinder(binder_class.name) unless binder.is_a? TemplateBinder
-          end
-        else
-          new(template, context)
-        end
+        raise DuplicatedLoop.new(self.class.name, loop_parser.id) if loop_parser.count > 1
       end
     end
 

@@ -6,7 +6,7 @@ require 'tzispa/utils/string'
 require 'tzispa/utils/indenter'
 require 'tzispa/rig/parameters'
 require 'tzispa/rig/parsernext'
-require 'tzispa/rig/binder'
+require 'tzispa/rig/template_binder'
 
 module Tzispa
   module Rig
@@ -97,7 +97,7 @@ module Tzispa
 
       using Tzispa::Utils::TzString
 
-      BASIC_TYPES    = [:layout, :block, :static].freeze
+      BASIC_TYPES    = %i[layout block static].freeze
       RIG_EXTENSION  = 'rig'
 
       attr_reader :id, :name, :type, :domain, :parser, :subdomain, :childrens, :content_type
@@ -133,7 +133,7 @@ module Tzispa
       def render(context, binder = nil)
         parse! unless parser
         binder ||= TemplateBinder.for self, context
-        binder.bind! if binder&.respond_to?(:bind!)
+        binder.bound
         parser.render binder
       end
 
@@ -205,7 +205,7 @@ module Tzispa
       end
 
       def create_binder
-        return unless [:block, :layout].include?(type)
+        return unless %i[block layout].include?(type)
         ::File.open("#{domain.path}/#{binder_require}.rb", 'w') do |f|
           f.puts write_binder_code
         end
