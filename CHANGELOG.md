@@ -2,7 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
-@@ v0.5.3
+## v0.5.4
+- fix nested loops not binding
+
+## v0.5.3
 - added before/after hooks in template binders
 
 ## v0.5.2
