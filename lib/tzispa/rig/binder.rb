@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'forwardable'
+require 'json'
+require 'tzispa/utils/hash'
 
 module Tzispa
   module Rig
@@ -58,8 +60,8 @@ module Tzispa
       # loop_id<Symbol>: The id of the template loop to bind
       #
       def loop_binder(loop_id)
-        lp = loop_parser?(loop_id)
-        LoopBinder.new(lp.first, @context) if lp
+        prl = loop_parser?(loop_id)
+        LoopBinder.new(prl, context) if prl
       end
 
       def attr_cache(*attrs)
@@ -71,7 +73,7 @@ module Tzispa
       def loop_parser?(loop_id)
         lp = @parser.loop_parser loop_id
         duplicated? lp
-        lp if lp.count.positive?
+        lp.first if lp.count.positive?
       end
 
       def duplicated?(loop_parser)
@@ -79,9 +81,39 @@ module Tzispa
       end
     end
 
-    class LoopBinder < Binder
-      attr_reader :data
+    class AttachBinder < Binder
+      using Tzispa::Utils::TzHash
 
+      def data
+        @data ||= data_struct.new
+      end
+
+      def attach(**params)
+        data.tap do |d|
+          params.each do |k, v|
+            next unless tags.include? k
+            d[k] = evaluate k, v
+          end
+        end
+      end
+
+      def attach_json(data)
+        attach(JSON.parse(data).deep_symbolize!)
+      end
+
+      def evaluate(k, value)
+        case value
+        when Enumerable
+          loop_binder(k)&.bind! { value.reject(&:nil?).map { |item| loop_item item } } || value
+        when Proc
+          loop_binder(k)&.bind!(&value) || value.call
+        else
+          value
+        end
+      end
+    end
+
+    class LoopBinder < AttachBinder
       def bind!(&generator)
         @source_object = eval 'self', generator.binding
         @data = instance_eval(&generator).to_enum(:each)
@@ -104,7 +136,7 @@ module Tzispa
         (LoopItem.new self).tap do |item|
           params&.each do |k, v|
             next unless tags.include? k
-            item.data[k] = v
+            item.data[k] = evaluate k, v
           end
         end
       end
