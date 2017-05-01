@@ -2,7 +2,7 @@
 
 module Tzispa
   module Rig
-    module TypeToken
+    module Tokens
 
       class Blk < Rig::Token
         attr_reader :id, :params

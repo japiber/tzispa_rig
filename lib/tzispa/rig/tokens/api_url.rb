@@ -2,7 +2,7 @@
 
 module Tzispa
   module Rig
-    module TypeToken
+    module Tokens
 
       class Url < Rig::Token
         attr_reader :layout, :params, :app_name

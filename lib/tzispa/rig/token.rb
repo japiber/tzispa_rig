@@ -23,7 +23,7 @@ module Tzispa
 
       class << self
         def instance(parser, type, match)
-          "Tzispa::Rig::TypeToken::#{type.to_s.capitalize}".constantize.new parser, match
+          "Tzispa::Rig::Tokens::#{type.to_s.capitalize}".constantize.new parser, match
         end
       end
 
@@ -32,10 +32,10 @@ module Tzispa
       end
     end
 
-    require 'tzispa/rig/type_token/api_url'
-    require 'tzispa/rig/type_token/expression'
-    require 'tzispa/rig/type_token/statement'
-    require 'tzispa/rig/type_token/block'
+    require 'tzispa/rig/tokens/api_url'
+    require 'tzispa/rig/tokens/expression'
+    require 'tzispa/rig/tokens/statement'
+    require 'tzispa/rig/tokens/block'
 
   end
 end

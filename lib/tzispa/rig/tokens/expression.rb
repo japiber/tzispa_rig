@@ -4,7 +4,7 @@ require 'tzispa/utils/string'
 
 module Tzispa
   module Rig
-    module TypeToken
+    module Tokens
 
       class Meta < Rig::Token
         attr_reader :id

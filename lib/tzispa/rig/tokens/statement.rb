@@ -4,7 +4,7 @@ require 'forwardable'
 
 module Tzispa
   module Rig
-    module TypeToken
+    module Tokens
 
       class Loop < Rig::Token
         extend Forwardable
