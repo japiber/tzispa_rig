@@ -11,7 +11,7 @@ module Tzispa
 
       using Tzispa::Utils::TzString
 
-      RE_ANCHOR = /(\$\$\h+\$\$)/
+      RE_ANCHOR = /(\u0010\$\h+\$\u0010)/
 
       attr_reader :type, :parser
       def_delegators :@parser, :domain, :content_type, :template
@@ -28,7 +28,7 @@ module Tzispa
       end
 
       def anchor
-        @anchor ||= "$$#{format '%x', object_id}$$"
+        @anchor ||= "\u0010$#{format '%x', object_id}$\u0010"
       end
     end
 
