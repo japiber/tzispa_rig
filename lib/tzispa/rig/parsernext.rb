@@ -40,7 +40,6 @@ module Tzispa
           @attribute_tags = nil
           @childrens = []
           @tokens = []
-          @loop_parser = {}
           parse_flags
           if bindable?
             parse_statements
@@ -73,11 +72,11 @@ module Tzispa
                     end
       end
 
-      def loop_parser(id)
+      def loop_token(id)
         lpp = tokens.select { |p| p.type == :loop && p.id == id }
         lpp.concat(
           tokens.select { |p| p.type == :ife }.map do |p|
-            p.loop_parser(id)
+            p.loop_token(id)
           end.flatten.compact
         )
       end

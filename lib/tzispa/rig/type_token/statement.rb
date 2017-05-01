@@ -67,9 +67,9 @@ module Tzispa
                              end
         end
 
-        def loop_parser(id)
-          lpp = then_parser.loop_parser(id)
-          lpp.concat(else_parser&.loop_parser(id) || [])
+        def loop_token(id)
+          lpp = then_parser.loop_token(id)
+          lpp.concat(else_parser&.loop_token(id) || [])
           lpp.compact.freeze
         end
 

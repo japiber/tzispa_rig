@@ -50,17 +50,11 @@ module Tzispa
       #
       #    loop_binder(:mylist)
       #
-      # The LoopBinder returned by this funcion is independent of the
-      # parent binder where it is defined, so the template symbols of the parent
-      # binder are not accesible in the loop_binder context. In
-      # other words, in the top example the two 'myvar' symbols are different
-      # and you can not access the first myvar value inside the loop
-      #
       # ==== Parameters
       # loop_id<Symbol>: The id of the template loop to bind
       #
       def loop_binder(loop_id)
-        prl = loop_parser?(loop_id)
+        prl = loop?(loop_id)
         LoopBinder.new(prl, context) if prl
       end
 
@@ -70,14 +64,14 @@ module Tzispa
 
       private
 
-      def loop_parser?(loop_id)
-        lp = @parser.loop_parser loop_id
-        duplicated? lp
-        lp.first if lp.count.positive?
+      def loop?(loop_id)
+        ltk = parser.loop_token loop_id
+        duplicated? ltk
+        ltk.first if ltk.count.positive?
       end
 
-      def duplicated?(loop_parser)
-        raise DuplicatedLoop.new(self.class.name, loop_parser.id) if loop_parser.count > 1
+      def duplicated?(token)
+        raise DuplicatedLoop.new(self.class.name, token.id) if token.count > 1
       end
     end
 
