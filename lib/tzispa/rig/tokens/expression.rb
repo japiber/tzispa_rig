@@ -41,9 +41,13 @@ module Tzispa
         end
 
         def render(binder)
-          if binder.data.respond_to?(@id)
-            value = binder.data.send(@id).to_s
-            value.send(parser.content_escape_method) rescue value
+          if binder.data.respond_to?(id)
+            value = binder.data.send(id).to_s
+            begin
+              value.send(parser.content_escape_method)
+            rescue
+              value
+            end
           else
             unknown
           end

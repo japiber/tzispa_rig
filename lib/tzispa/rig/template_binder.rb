@@ -32,6 +32,7 @@ module Tzispa
         do_before
         bind! if respond_to?(:bind!)
         do_after
+        self
       end
 
       def self.for(template, context)
