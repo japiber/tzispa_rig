@@ -2,6 +2,10 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.5
+- minor code refactory
+- move template creation code to helper module
+
 ## v0.5.4
 - fix nested loops not binding
 
