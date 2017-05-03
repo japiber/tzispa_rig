@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'fileutils'
-require 'tzispa/utils/string'
-require 'tzispa/utils/indenter'
 require 'tzispa/rig/parameters'
 require 'tzispa/rig/parsernext'
 require 'tzispa/rig/template_binder'
+require 'tzispa/rig/helpers/template_maker'
 
 module Tzispa
   module Rig
@@ -95,7 +93,9 @@ module Tzispa
     class Template < File
       extend Forwardable
 
-      using Tzispa::Utils::TzString
+      include Tzispa::Rig::Helpers::TemplateMaker
+
+
 
       BASIC_TYPES    = %i[layout block static].freeze
       RIG_EXTENSION  = 'rig'
@@ -122,29 +122,30 @@ module Tzispa
         self
       end
 
-      def modified?
-        super || (parser && parser.childrens.index(&:modified?))
-      end
-
-      def valid?
-        !content.empty? && !parser.empty?
-      end
-
       def render(context, binder = nil)
         parse! unless parser
         binder ||= TemplateBinder.for self, context
-        binder.bound
-        parser.render binder
+        parser.render binder.bound
       end
 
       def path
         @path ||= "#{domain.path}/view/#{subdomain || '_'}/#{type.to_s.downcase}"
       end
 
-      def create(content = '')
-        FileUtils.mkdir_p(path) unless Dir.exist? path
-        super(content)
-        create_binder
+      def params=(value)
+        @params = Parameters.new(value)
+      end
+
+      def params
+        @params.data
+      end
+
+      def modified?
+        super || (parser && parser.childrens.index(&:modified?))
+      end
+
+      def valid?
+        !content.empty? && !parser.empty?
       end
 
       def block?
@@ -163,33 +164,6 @@ module Tzispa
         block? || layout?
       end
 
-      def params=(value)
-        @params = Parameters.new(value)
-      end
-
-      def params
-        @params.data
-      end
-
-      def binder_require
-        @binder_require ||= "view/#{subdomain || '_'}/#{type}/#{name.downcase}"
-      end
-
-      def binder_namespace
-        @binder_namespace ||= "#{domain.name.to_s.camelize}::#{subdomain&.camelize}View"
-      end
-
-      def binder_class_name
-        @binder_class_name ||= @name.camelize
-      end
-
-      def binder_class
-        @binder_class ||= begin
-          domain.require binder_require
-          "#{binder_namespace}::#{binder_class_name}#{type.to_s.capitalize}".constantize
-        end
-      end
-
       private
 
       def build_name(name)
@@ -202,30 +176,6 @@ module Tzispa
       def type=(value)
         raise ArgumentError("#{value} is not a Rig block") unless BASIC_TYPES.include?(value)
         @type = value
-      end
-
-      def create_binder
-        return unless %i[block layout].include?(type)
-        ::File.open("#{domain.path}/#{binder_require}.rb", 'w') do |f|
-          f.puts write_binder_code
-        end
-      end
-
-      def write_binder_code
-        Tzispa::Utils::Indenter.new(2).tap do |binder_code|
-          binder_code << "require 'tzispa/rig/binder'\n\n"
-          level = 0
-          binder_namespace.split('::').each do |ns|
-            binder_code.indent if level.positive?
-            binder_code << "module #{ns}\n"
-            level += 1
-          end
-          binder_code.indent << "\nclass #{binder_class_name} < Tzispa::Rig::TemplateBinder\n\n"
-          binder_code.indent << "def bind!\n"
-          binder_code << "end\n\n"
-          binder_code.unindent << "end\n"
-          binder_namespace.split('::').each { binder_code.unindent << "end\n" }
-        end.to_s
       end
     end
 
