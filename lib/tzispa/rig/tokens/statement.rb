@@ -10,7 +10,7 @@ module Tzispa
         extend Forwardable
 
         attr_reader :id, :body_parser
-        def_delegators :@body_parser, :attribute_tags, :loop_parser
+        def_delegators :@body_parser, :attribute_tags, :loop_token
 
         def initialize(parser, match)
           super(parser, :loop)
