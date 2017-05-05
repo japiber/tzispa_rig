@@ -2,6 +2,9 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.6
+- bugs fix
+
 ## v0.5.5
 - minor code refactory
 - move template creation code to helper module
