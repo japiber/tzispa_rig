@@ -95,11 +95,6 @@ module Tzispa
 
       include Tzispa::Rig::Helpers::TemplateMaker
 
-
-
-      BASIC_TYPES    = %i[layout block static].freeze
-      RIG_EXTENSION  = 'rig'
-
       attr_reader :id, :name, :type, :domain, :parser, :subdomain, :childrens, :content_type
       def_delegators :@parser, :attribute_tags
 
