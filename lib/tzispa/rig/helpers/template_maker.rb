@@ -8,8 +8,11 @@ module Tzispa
   module Rig
     module Helpers
       module TemplateMaker
-
         using Tzispa::Utils::TzString
+
+        BASIC_TYPES    = %i[layout block static].freeze
+
+        RIG_EXTENSION  = 'rig'
 
         def create(content = '')
           FileUtils.mkdir_p(path) unless Dir.exist? path
@@ -26,13 +29,14 @@ module Tzispa
         end
 
         def binder_class_name
-          @binder_class_name ||= @name.camelize
+          @binder_class_name ||= "#{name.camelize}#{type.to_s.capitalize}"
         end
 
         def binder_class
           @binder_class ||= begin
-            domain.require binder_require
-            "#{binder_namespace}::#{binder_class_name}#{type.to_s.capitalize}".constantize
+            if domain.require binder_require
+              "#{binder_namespace}::#{binder_class_name}".constantize
+            end
           end
         end
 
