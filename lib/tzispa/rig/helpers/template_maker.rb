@@ -34,9 +34,8 @@ module Tzispa
 
         def binder_class
           @binder_class ||= begin
-            if domain.require binder_require
-              "#{binder_namespace}::#{binder_class_name}".constantize
-            end
+            domain.require binder_require
+            "#{binder_namespace}::#{binder_class_name}".constantize
           end
         end
 

@@ -117,10 +117,13 @@ module Tzispa
         self
       end
 
-      def render(context, binder = nil)
+      def render(context, bind = nil)
         parse! unless parser
-        binder ||= TemplateBinder.for self, context
-        parser.render binder.bound
+        parser.render binder(context, bind)
+      end
+
+      def binder(context, bind)
+        bind || TemplateBinder.for(self, context)&.bound
       end
 
       def path
