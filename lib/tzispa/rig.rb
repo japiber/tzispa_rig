@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Tzispa
   module Rig
 
@@ -5,9 +7,9 @@ module Tzispa
     require 'tzispa/rig/parameters'
     require 'tzispa/rig/token'
     require 'tzispa/rig/parsernext'
-    require 'tzispa/rig/template'        
+    require 'tzispa/rig/template'
     require 'tzispa/rig/binder'
-    require 'tzispa/rig/engine'
+    require 'tzispa/rig/factory'
 
   end
 end

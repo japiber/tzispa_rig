@@ -38,16 +38,16 @@ module Tzispa
         def obtain_block(id)
           case id
           when '__empty__'
-            Rig::Engine.empty
+            Rig::Factory.empty
           when template&.id
             # to avoid infinite recursion
             if template&.type == :block
               template
             else
-              Rig::Engine.block(name: id, domain: domain, content_type: content_type)
+              Rig::Factory.block(name: id, domain: domain, content_type: content_type)
             end
           else
-            Rig::Engine.block(name: id, domain: domain, content_type: content_type)
+            Rig::Factory.block(name: id, domain: domain, content_type: content_type)
           end
         end
       end
@@ -87,16 +87,16 @@ module Tzispa
         def obtain_block(id)
           case id
           when '__empty__'
-            Rig::Engine.empty
+            Rig::Factory.empty
           when template&.id
             # to avoid infinite recursion
             if template&.type == :block
               template
             else
-              Rig::Engine.block(name: id, domain: domain, content_type: content_type)
+              Rig::Factory.block(name: id, domain: domain, content_type: content_type)
             end
           else
-            Rig::Engine.block(name: id, domain: domain, content_type: content_type)
+            Rig::Factory.block(name: id, domain: domain, content_type: content_type)
           end
         end
 
@@ -118,9 +118,9 @@ module Tzispa
         end
 
         def parse!
-          @parsed_static = Tzispa::Rig::Engine.static name: @id,
-                                                      domain: domain,
-                                                      content_type: content_type
+          @parsed_static = Tzispa::Rig::Factory.static name: @id,
+                                                       domain: domain,
+                                                       content_type: content_type
           parser.childrens << @parsed_static
           self
         end
