@@ -63,22 +63,12 @@ module Tzispa
         result_json error_message: error_message
       end
 
-      def on_error(http_error, error_code = nil, logger = nil)
-        @rescue_hook = { logger: logger, error_code: error_code, http_error: http_error }
-      end
-
       def run!(verb, predicate = nil)
         raise UnknownHandlerVerb.new(verb, self.class.name) unless provides? verb
         raise InvalidSign if sign_required? && !sign_valid?
-        begin
-          do_before
-          send verb, *(predicate&.split(','))
-          do_after
-        rescue => err
-          raise unless rescue_hook
-          send(rescue_hook[:logger], err) if rescue_hook.include? :logger
-          send(rescue_hook[:http_error], rescue_hook[:error_code])
-        end
+        do_before
+        send verb, *(predicate&.split(','))
+        do_after
       end
 
       def redirect_url(url)
