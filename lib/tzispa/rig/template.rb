@@ -2,7 +2,7 @@
 
 require 'forwardable'
 require 'tzispa/rig/parameters'
-require 'tzispa/rig/parsernext'
+require 'tzispa/rig/parser_next'
 require 'tzispa/rig/template_binder'
 require 'tzispa/rig/helpers/template_maker'
 
@@ -75,7 +75,7 @@ module Tzispa
       def load!
         raise Tzispa::Rig::NotFound.new(filename) unless exist?
         ::File.open(filename, "r:#{encoding}") do |f|
-          @content = String.new
+          @content = +''
           @modified = f.mtime
           f.each { |line| @content << line }
           @loaded = true
@@ -139,7 +139,7 @@ module Tzispa
       end
 
       def modified?
-        super || (parser && parser.childrens.index(&:modified?))
+        super || parser&.childrens&.index(&:modified?)
       end
 
       def valid?
