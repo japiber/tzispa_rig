@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # -*- encoding: utf-8 -*-
 require File.expand_path('../lib/tzispa/rig/version', __FILE__)
 
@@ -12,10 +13,11 @@ Gem::Specification.new do |s|
   s.description = 'General purpose template engine'
   s.licenses    = ['MIT']
 
-  s.required_ruby_version     = '~> 2.3'
+  s.required_ruby_version     = '~> 2.4'
 
-  s.add_dependency 'tzispa_utils',   '~> 0.3'
-  s.add_dependency 'moneta',         '~> 1.0'
+  s.add_dependency 'tzispa_utils',         '~> 0.3'
+  s.add_dependency 'tzispa_annotations',   '~> 0.1'
+  s.add_dependency 'moneta',               '~> 1.0'
 
   s.add_development_dependency "minitest", "~> 5.0"
 
