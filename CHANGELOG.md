@@ -2,8 +2,11 @@ Tzispa Rig
 
 Rig templates implementation
 
+## v0.5.9
+- classes constants autoloading
+
 ## v0.5.8
-- engine class renmaed to factory
+- engine class renamed to factory
 
 ## v0.5.6
 - bugs fix
