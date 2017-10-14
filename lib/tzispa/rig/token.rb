@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'tzispa/utils/string'
+require 'tzispa_utils'
 
 module Tzispa
   module Rig

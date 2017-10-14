@@ -2,7 +2,7 @@
 
 require 'forwardable'
 require 'json'
-require 'tzispa/utils/hash'
+require 'tzispa_utils'
 
 module Tzispa
   module Rig

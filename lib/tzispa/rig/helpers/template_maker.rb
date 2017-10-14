@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'tzispa/utils/string'
-require 'tzispa/utils/indenter'
+require 'tzispa_utils'
 
 module Tzispa
   module Rig
@@ -66,4 +65,3 @@ module Tzispa
     end
   end
 end
-
