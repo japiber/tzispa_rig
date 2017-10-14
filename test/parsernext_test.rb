@@ -1,6 +1,6 @@
 require 'fileutils'
 require 'test_helper'
-require 'tzispa/helpers/security'
+require 'tzispa_helpers'
 
 class ParsernextTest < Minitest::Test
   include TemplateTestHelper

@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'tzispa/helpers/provider'
-require 'tzispa/helpers/sign_requirer'
-require 'tzispa/helpers/hooks/before'
-require 'tzispa/helpers/hooks/after'
+require 'tzispa_helpers'
 require_relative 'handler_error'
 
 module Tzispa

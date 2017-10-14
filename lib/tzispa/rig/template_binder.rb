@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-require 'tzispa/helpers/hooks/before'
-require 'tzispa/helpers/hooks/after'
-require 'tzispa/rig/binder'
+require 'tzispa_helpers'
+require 'tzispa_rig'
 
 module Tzispa
   module Rig

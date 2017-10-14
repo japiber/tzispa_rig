@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version     = '~> 2.4'
 
   s.add_dependency 'tzispa_utils',         '~> 0.3.5'
+  s.add_dependency 'tzispa_helpers',       '~> 0.3.5'
   s.add_dependency 'tzispa_annotations',   '~> 0.1'
   s.add_dependency 'moneta',               '~> 1.0'
 

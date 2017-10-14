@@ -47,7 +47,7 @@ module Tzispa
 
         def write_binder_code
           Tzispa::Utils::Indenter.new(2).tap do |binder_code|
-            binder_code << "require 'tzispa/rig/binder'\n\n"
+            binder_code << "require 'tzispa_rig'\n\n"
             level = 0
             binder_namespace.split('::').each do |ns|
               binder_code.indent if level.positive?
