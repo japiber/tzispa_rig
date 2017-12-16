@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'tzispa_utils',         '~> 0.3.5'
   s.add_dependency 'tzispa_helpers',       '~> 0.3.5'
-  s.add_dependency 'tzispa_annotations',   '~> 0.1'
+  s.add_dependency 'tzispa_annotations',   '~> 0.1.0'
   s.add_dependency 'moneta',               '~> 1.0'
 
   s.add_development_dependency "minitest", "~> 5.0"
